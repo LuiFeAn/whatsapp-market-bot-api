@@ -3,3 +3,5 @@
 /wpp_auth
 
 .env
+
+/.wwebjs_cache
