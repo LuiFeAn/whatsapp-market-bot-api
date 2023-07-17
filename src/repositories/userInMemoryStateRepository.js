@@ -18,6 +18,12 @@ class userInMemoryStateRepository {
 
     }
 
+    remove(id){
+
+        this.steps = this.steps.map( step => step.id != id );
+
+    }
+
     insert({ step, id }){
 
         this.steps.push({

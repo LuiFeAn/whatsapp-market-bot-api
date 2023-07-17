@@ -2,6 +2,7 @@ const qrCodeTerminal = require('qrcode-terminal');
 const userRepository = require('../repositories/userRepository');
 const userInMemoryRepository = require('../repositories/userInMemoryRepository');
 const userInMemoryStateRepository = require('../repositories/userInMemoryStateRepository');
+const userMessageCounter = require("../utils/userMessageCount");
 const validPhoneNumber = require('../utils/isAPhoneNumber');
 const delay = require('../utils/delay');
 const client = require('../clients/whatsappClient');
@@ -63,7 +64,7 @@ class WhatsappBotService {
     
                     if( body.length < 12 ){
     
-                        await message.reply(number,'Hmmm... me parece que este não é seu nome completo. Por gentileza, me envie seu nome completo para que eu possa completar seu cadastro !');
+                        await message.reply('Hmmm... me parece que este não é seu nome completo. Por gentileza, me envie seu nome completo para que eu possa completar seu cadastro !');
     
                         return;
     
@@ -71,7 +72,7 @@ class WhatsappBotService {
     
                     await delay();
     
-                    await message.reply(number,`Perfeito, ${body}`);
+                    await message.reply(`Perfeito, ${body}`);
     
                     userInMemoryRepository.insert(number);
     
@@ -93,17 +94,28 @@ class WhatsappBotService {
     
                 'WAITING_MESSAGE_NUMBER': async () => {
     
+
                     if( !validPhoneNumber(body) ){
     
-                        await message.reply(number,'Ops ! parece que este número de telefone é inválido. Por favor, envie um número de telefone válido');
+                        await message.reply('Ops ! parece que este número de telefone é inválido. Por favor, envie um número de telefone válido');
     
                         return;
     
                     }
+
+                    const numberExists = await userRepository.findOne({
+                        numero_telefone: body
+                    });
+
+                    if( numberExists ){
+
+                        await message.reply('Este número já se encontra cadastrado no nosso sistema. Por gentileza, informe outro número');
+
+                        return
+
+                    }
     
-                    await delay();
-    
-                    await message.reply(number,'Show !')
+                    await message.reply('Show !')
     
                     userInMemoryRepository.update({
                         id: number,
@@ -134,9 +146,16 @@ class WhatsappBotService {
     
                     await client.sendMessage(number,'Perfeito ! seu cadastro está completo 😎😆');
 
-                    delay();
+                    await delay();
 
                     await client.sendMessage(number,botDefaultMessages.selectMenuOption);
+
+                    userInMemoryRepository.delete(number);
+
+                    userInMemoryStateRepository.update({
+                        id: number,
+                        step:'CHOOSE_MENU_OPTION'
+                    })
                     
     
                 },
@@ -154,7 +173,6 @@ class WhatsappBotService {
 
         if( !userStep ){
 
-
             await client.sendMessage(number,`Olá, ${user.nome_completo} ! Que bom ver você de novo por aqui 😁 \n Com o que posso auxiliar você ? `);
 
             delay();
@@ -166,6 +184,8 @@ class WhatsappBotService {
                 step:'CHOOSE_MENU_OPTION'
             });
 
+            return;
+
 
         }
 
@@ -175,15 +195,7 @@ class WhatsappBotService {
 
                 const validOptions = ['1','2'];
 
-                if( !validOptions.includes(body) ){
-
-                    await message.reply(number,'Opção inválida ❌. Por favor, selecione uma opção válida para que eu possa dar inicio ao seu atendimento!');
-
-                    return
-
-                }
-
-            const handleMenuOption = {
+                const handleMenuOption = {
 
                     '1': async () => {
 
@@ -195,10 +207,17 @@ class WhatsappBotService {
 
                     },
 
+                    'default': async () => {
 
-            }
+                        await message.reply('Opção inválida ! Por favor, selecione uma opção válida')
 
-            await handleMenuOption[body]();
+                    },
+
+                }
+
+                const validOption = validOptions.find( option => option === body );
+
+                handleMenuOption[ validOption || 'default' ]();
 
 
             }
