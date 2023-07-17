@@ -4,19 +4,21 @@ class WhatsappBotController {
 
     onQrCode(qrCode){
 
-        whatsappBotService.generateQrCode(qrCode);
+        return whatsappBotService.generateQrCode(qrCode);
 
     }
 
     onReady(ready){
 
-        whatsappBotService.start(ready);
+        return whatsappBotService.start(ready);
 
     }
 
     async onMessage(message){
 
         await whatsappBotService.messsageHandler(message);
+
+        return
 
     }
 
