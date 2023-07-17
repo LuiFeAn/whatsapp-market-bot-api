@@ -1,3 +1,5 @@
 /node_modules
 
-/wppAuth
+/wpp_auth
+
+.env
