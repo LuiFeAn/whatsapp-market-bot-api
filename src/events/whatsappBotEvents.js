@@ -1,15 +1,14 @@
-const { Client } = require('whatsapp-web.js');
+const client = require('../clients/whatsappClient');
 const qrCode = require('qrcode-terminal');
-const userRepository = require('./repositories/userRepository');
-const userInMemoryRepository = require('./repositories/userInMemoryRepository');
-const userInMemoryStateRepository = require('./repositories/userInMemoryStateRepository');
-const validPhoneNumber = require('./utils/isAPhoneNumber');
-const delay = require('./utils/delay');
+const userRepository = require('../repositories/userRepository');
+const userInMemoryRepository = require('../repositories/userInMemoryRepository');
+const userInMemoryStateRepository = require('../repositories/userInMemoryStateRepository');
+const validPhoneNumber = require('../utils/isAPhoneNumber');
+const delay = require('../utils/delay');
 const dotenv = require('dotenv');
 
 dotenv.config();
 
-const client = new Client();
 
 client.on('qr', code => qrCode.generate(code,{
     small:true

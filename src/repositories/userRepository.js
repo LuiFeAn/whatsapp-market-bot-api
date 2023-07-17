@@ -1,4 +1,4 @@
-const query = require('../infra/mysql-async');
+const query = require('../database/mysql-async');
 
 class UserRepository {
 
