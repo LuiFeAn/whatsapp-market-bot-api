@@ -18,7 +18,7 @@ class UserRepository {
 
         query('ECONOBOT',{
             query:'INSERT INTO clientes VALUES(?,?,?,?)',
-            values:[id,nome_completo,numero_telefone,endereco]
+            values:[id,nome_completo.toUpperCase(),numero_telefone,endereco.toUpperCase()]
         });
 
     }

@@ -2,6 +2,7 @@ const qrCodeTerminal = require('qrcode-terminal');
 const userRepository = require('../repositories/userRepository');
 const userInMemoryRepository = require('../repositories/userInMemoryRepository');
 const userInMemoryStateRepository = require('../repositories/userInMemoryStateRepository');
+const productRepository = require("../repositories/productRepository");
 const userMessageCounter = require("../utils/userMessageCount");
 const validPhoneNumber = require('../utils/isAPhoneNumber');
 const delay = require('../utils/delay');
@@ -201,6 +202,11 @@ class WhatsappBotService {
 
                         await client.sendMessage(number,'Qual produto você gostaria de pesquisar ?');
 
+                        userInMemoryStateRepository.update({
+                            id: number,
+                            step:'SEARCH_PRODUCT'
+                        })
+
                     },
 
                     '2': async () => {
@@ -219,6 +225,44 @@ class WhatsappBotService {
 
                 handleMenuOption[ validOption || 'default' ]();
 
+            },
+
+            'SEARCH_PRODUCT': async () => {
+
+                if( body.toUpperCase() === 'finalizar' ){
+
+                    await client.sendMessage(number,'Certo ! até breve ! ')
+
+                    userInMemoryStateRepository.remove(number);
+
+                }
+
+                await client.sendMessage(number,'Aguarde um momento enquanto eu consulto aqui nossas prateleiras 😉 !');
+
+                const products = await productRepository.findAll({
+                    codigo_barras: body,
+                    product: body
+                });
+
+                if( products.length == 0 ){
+
+                    await delay();
+
+                    await message.reply('Poxa, infelizmente não temos este produto no momento ! diga outro produto, ou se preferir digite "finalizar" para encerrar seu atendimento');
+
+                    return
+
+                }
+
+                await message.reply(`Pude encontrar os seguintes produtos relacionados a ${body}:`);
+
+                for await(const product of products ){
+
+                    await client.sendMessage(number,`*Produto*:\n*${product.produto}*\n\n*${product.descricao}*\n\n*Valor:*\n*R$${product.preco}*`);
+
+                }
+
+                await client.sendMessage(number,'Deseja pesquisar mais alguma coisa?');
 
             }
 

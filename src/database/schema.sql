@@ -11,3 +11,14 @@ CREATE TABLE clientes(
 
 );
 
+CREATE TABLE produtos(
+
+    id INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    codigo_barra VARCHAR(250),
+    produto VARCHAR(250) NOT NULL,
+    descricao VARCHAR(500) NOT NULL,
+    estoque INT(10) NOT NULL,
+    preco DECIMAL(10,2) NOT NULL
+
+);
+

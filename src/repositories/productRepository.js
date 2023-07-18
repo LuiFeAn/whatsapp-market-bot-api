@@ -1,17 +1,21 @@
-const query = require('../infra/mysql-async');
+const query = require('../database/mysql-async');
 const dotenv = require('dotenv');
 
 dotenv.config();
 
 class ProductRepository {
 
-    findAll(product){
+    findAll({product,codigo_barras}){
 
-        return query('ECONOCOMPRAS',{
-            query: process.env.ECONOCOMPRAS_SELECT_PRODUCT_QUERY,
-            values:[product]
+        return query('ECONOBOT',{
+            query: 'SELECT * FROM produtos WHERE produto LIKE ? OR codigo_barras LIKE ?',
+            values:[`${product}%`,`${codigo_barras}%`]
         })
 
+    }
+
+    update(id){
+        
     }
 
 }
