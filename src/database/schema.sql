@@ -11,6 +11,13 @@ CREATE TABLE clientes(
 
 );
 
+
+CREATE TABLE opcoes_bot(
+
+    enviar_descricao_produto BOOLEAN NOT NULL
+
+);
+
 CREATE TABLE produtos(
 
     id INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
