@@ -26,6 +26,12 @@ class ShoppingInMemoryRepository {
 
     }
 
+    remove(id){
+
+        this.shopping = this.shopping.filter( shopping => shopping.id != id );
+
+    }
+
     updateShoppingCart({ id, productInfos }){
 
         const existent = this.getItemFromShoppingCart(id);

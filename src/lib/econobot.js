@@ -24,7 +24,7 @@ class Econobot {
         this.client = client;
 
         this.defaultMessages = {
-            selectMenuOption:'Escolha a opção que deseja: \n 1 - Pesquisar Produto(s) \n 2 - ...?'
+            selectMenuOption:'Escolha a opção que deseja: \n1 - Pesquisar Produto(s)'
         }
 
     }
@@ -177,9 +177,9 @@ class Econobot {
 
             if( !userStep ){
 
-                await this.say(userStep.id,`Olá, ${user.nome_completo} ! Que bom ver você de novo por aqui 😁 \n Com o que posso auxiliar você ? `)
+                await this.say(user.id,`Olá, ${user.nome_completo} ! Que bom ver você de novo por aqui 😁 \n Com o que posso auxiliar você ? `)
 
-                await this.say(userStep.id,this.defaultMessages.selectMenuOption);
+                await this.say(user.id,this.defaultMessages.selectMenuOption);
 
                 userInMemoryStateRepository.insert({
                     id: number,
@@ -191,104 +191,76 @@ class Econobot {
 
             }
 
-            if( body.toLowerCase().includes("carrinho") ){
+
+            const lowerMessage = body.toLowerCase();
+
+            if( lowerMessage.includes("carrinho")){
 
                 if( !userShoppingCart ){
 
-                    await message.reply('Ops ! parece que no momento você não tem nenhum item no seu carrinho !');
+                    await this.say(userStep.id,'Ops... parece que no momento você não tem nenhum item no seu carrinho 👀\n Que tal adicionar alguns itens?');
 
                     return
 
                 }
 
+                await message.reply('Aguarde enquanto busco aqui seu carrinho... É rápidinho ! 😉');
 
-                await this.say(userStep.id,'1 - Meu Carrinho\n2 - Menu Checkout');
+                const { products } = userShoppingCart;
 
+                const productsWithCalcPerItem = products.map( item => ({
+                    ...item,
+                    produto: item.produto.toUpperCase(),
+                    total: ( item.quanty * item.preco )
+                }));
+
+                const totalShoppingCart = productsWithCalcPerItem.reduce((acc,item) => (
+                    acc + item.total
+                ),0);
+
+                for await( const product of productsWithCalcPerItem ){
+
+                    await this.say(userStep.id,`*${product.produto}*\n*${product.quanty}* *UND X ${product.preco} - R$ ${product.total}*`,false);
+
+                }
+
+                await this.say(userStep.id,`Valor total ${totalShoppingCart}`,false);
+
+
+                await this.say(userStep.id,`*O que deseja fazer ? digite a opção desejada.*\n\n1 - Pesquisar novo(s) produto(s)\n2 - Deletar Produto\n3 - Alterar quantidade de produto\n4 - Limpar carrinho\n5 - Finalizar pedido`);
+                
                 userInMemoryStateRepository.update({
                     id: number,
                     step:'USER_SHOPPING_MANAGER_OPTIONS'
                 });
 
-                return;
-    
+                return
+
             }
-    
-            if( body.toLowerCase().includes("finalizar") ){
-    
-                userInMemoryStateRepository.remove(number);
+
+            if( lowerMessage.includes("finalizar atendimento")){
+
+                userInMemoryStateRepository.remove(userStep.id);
+
+                shoopingInMemoryRepository.remove(userStep.id);
+
+                userLastSelectedItemInMemoryRepository.removeSelectedItem(userStep.id);
 
                 await this.say(userStep.id,`Certo. Até breve, ${user.nome_completo} !`)
-    
-                return;
-    
+        
+                return
+
             }
+
             
             const handleUserState = {
 
 
                 'USER_SHOPPING_MANAGER_OPTIONS': async () => {
 
-                    const validOptions = ['1','2'];
+                    const valid = [ "1","2" ];
 
-                    const handleOption = {
-
-                        '1': async () => {
-        
-                            await message.reply('Aguarde enquanto busco aqui seu carrinho... É rápidinho ! 😉')
-
-                            const { products } = userShoppingCart;
-        
-                            const productsWithCalcPerItem = products.map( item => ({
-                                ...item,
-                                produto: item.produto.toUpperCase(),
-                                total: ( item.quanty * item.preco ).toFixed(2)
-                            }));
-
-                            const totalShoppingCart = productsWithCalcPerItem.reduce((acc,item) => (
-                                acc + item.total
-                            ),0);
-        
-                            for await( const product of productsWithCalcPerItem ){
-        
-                                await this.say(userStep.id,`*${product.produto}*\n*${product.quanty}* *UND X ${product.preco} - R$ ${product.total}*`,false);
-        
-                            }
-
-                            await this.say(userStep.id,`Valor total ${totalShoppingCart}`,false);
-
-                        },
-
-                        '2': async () => {
-
-                            await this.say(userStep.id,`O que deseja fazer ? digite a opção desejada.\n\n 1 - Pesquisar novo(s) produto(s)\n2 - Deletar Produto\n3 - Alterar quantidade de produto\n4 - Limpar carrinho\n5 - Finalizar pedido\n6 - Voltar ao início`);
-
-                            userInMemoryStateRepository.update({
-                                id: number,
-                                step:'MENU_CHECKOUT_OPTIONS'
-                            })
-
-                        },
-
-                        'default': async () => {
-
-                            await this.say(userStep.id,'Opção de Menu inválida !');
-
-                        }
-
-                    }
-
-                    const option = validOptions.find( option => option.includes(body.toLowerCase()));
-
-                    await handleOption[ option ?? 'default' ]();
-        
-
-                },
-
-                "MENU_CHECKOUT_OPTIONS": async () => {
-
-                    const validOptions = ["1","2","3","4","5","6"];
-
-                    const handleOption = {
+                    const handleShoppingOptions = {
 
                         "1": async () => {
 
@@ -303,13 +275,23 @@ class Econobot {
                                 step:"SEARCH_PRODUCT"
                             });
 
+                        },
+
+                        "2": async () => {
+
+                        },
+
+                        "default": async () =>{
+
+                            await this.say(number,"Opção inválida !");
+
                         }
 
                     }
 
-                    const option = validOptions.find( option => option.includes(body.toLowerCase()));
+                    const option = valid.find( option => option.includes(lowerMessage) );
 
-                    await handleOption[ option ?? 'default']();
+                    handleShoppingOptions[ option ?? 'default']();
 
                 },
 
@@ -369,7 +351,7 @@ class Econobot {
 
                     if( products.length === 0 ){
 
-                        await message.reply(`Poxa, infelizmente não temos "${body}" no momento ! procure por outro produto, ou se preferir, digite "finalizar" para encerrar seu atendimento 😉`);
+                        await message.reply(`Poxa, infelizmente não temos "${body}" no momento ! procure por outro produto, ou se preferir, digite "finalizar atendimento" para encerrar seu atendimento 😉`);
 
                         return
 
@@ -470,7 +452,7 @@ class Econobot {
 
                     const { selected_item } = userLastSelectedItemInMemoryRepository.getSelectedItem(number);
 
-                    await this.say(userStep.id,`*Perfeito ! acabei de adicionar ${body}x quantidade(s) de ${selected_item.produto} ao seu carrinho 😉*`);
+                    await this.say(userStep.id,`*Perfeito ! acabei de adicionar ${body}x quantidade(s) de ${selected_item.produto} ao seu carrinho 😉*"`);
 
                     const userShoppingCart = shoopingInMemoryRepository.getItemFromShoppingCart(number);
 
@@ -488,7 +470,7 @@ class Econobot {
                         }
                     });
 
-                    await this.say(userStep.id,`Deseja adicionar mais algum produto desta lista ?\nCaso queira, digite "sim", do contrário, digite *carrinho* para gerenciar seu pedido.`);
+                    await this.say(userStep.id,`Deseja adicionar mais algum produto desta lista ?\nCaso queira, digite "sim", do contrário, digite *carrinho* para gerenciar seu pedido e realizar ações como modificar quantidade, remover, limpar seu carrinho ou finalizar seu pedido 😁.`);
 
                     userInMemoryStateRepository.update({
                         id: number,
