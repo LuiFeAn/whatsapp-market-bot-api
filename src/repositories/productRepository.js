@@ -8,7 +8,7 @@ class ProductRepository {
     findAll({product,codigo_barras}){
 
         return query('ECONOBOT',{
-            query: 'SELECT * FROM produtos WHERE produto LIKE ? OR codigo_barras LIKE ?',
+            query: 'SELECT * FROM produtos WHERE produto LIKE ? OR codigo_barra LIKE ?',
             values:[`${product}%`,`${codigo_barras}%`]
         })
 
