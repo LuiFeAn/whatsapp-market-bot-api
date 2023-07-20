@@ -1,0 +1,5 @@
+
+
+function objectSwitch(obj,state){
+    
+}
