@@ -212,6 +212,8 @@ class Econobot {
 
                 }
 
+                await userRepository.setCurrentStep(user.id,"USER_SHOPPING_MANAGER_OPTIONS");
+
                 const productsWithCalcPerItem = userShoppingCart.map( item => ({
                     ...item,
                     produto: item.produto.toUpperCase(),
@@ -233,7 +235,6 @@ class Econobot {
 
                 await this.say(`*O que deseja fazer ? digite a opção desejada.*\n\n1 - Pesquisar novo(s) produto(s)\n2 - Deletar Produto\n3 - Alterar quantidade de produto\n4 - Limpar carrinho\n5 - Finalizar pedido`);
                 
-                await userRepository.setCurrentStep(user.id,"USER_SHOPPING_MANAGER_OPTIONS");
 
                 return
 
@@ -263,13 +264,14 @@ class Econobot {
 
                         "1": async () => {
 
+                            await userRepository.setCurrentStep(user.id,"SEARCH_PRODUCT");
+
                             userLastSelectedItemInMemoryRepository.removeSelectedItem(user.id);;
 
                             itemsListInMemoryRepository.removeItemsList(user.id);
 
                             await this.say('Qual o produto que você gostaria de pesquisar?');
 
-                            await userRepository.setCurrentStep(user.id,"SEARCH_PRODUCT");
 
                         },
 
@@ -347,9 +349,11 @@ class Econobot {
                     }
 
 
-                    await Promise.all(products.map(async ( product, id )=>{
+                    await Promise.all(products.map(async ( product, id, items )=>{
 
-                        await this.say(`${id+=1} - *PRODUTO: ${product.produto}* *CÓDIGO DE BARRAS: ${product.codigo_barra}* *${toBRL(product.preco)}*`)
+                        const index = id+=1;
+
+                        await this.say(`Item: ${index}\nProduto: ${product.produto}\nValor: ${toBRL(product.preco.toString())}💰\nCódigo de Barras: ${product.codigo_barra}📊`);
 
                     }));
 
@@ -360,35 +364,10 @@ class Econobot {
 
                     await userRepository.setCurrentStep(user.id,"CHOOSE_ITEM");
 
-                },
+                    await this.say(`Estes foram todos os resultados que encontrei para "${body}"`);
 
-                "CHOOSE_OPTION_AFTER_SEARCH_PRODUCT": async () => {
+                    await this.say(`Digite o *número do item* da lista para que eu possa adicina-lo ao seu carrinho.\nObrigado e boas compras! 🛒✨`);
 
-                    const validOptions = ["sim"];
-
-                    const handleOption = {
-
-                        "sim": async () => {
-
-                            await this.say('Qual o outro item da lista que você gostaria de adicionar ?');
-
-                            userLastSelectedItemInMemoryRepository.removeSelectedItem(number);
-
-                            await userRepository.setCurrentStep(user.id,"CHOOSE_ITEM");
-
-                        },
-
-                        "default": async () => {
-
-                            await message.reply("Não entendi o que você quis dizer 🤔");
-
-                        }
-
-                    }
-
-                    const findOption = validOptions.find( option => option.includes(body.toLowerCase()) );
-
-                    await handleOption[ findOption ?? "default" ]();
 
                 },
 
@@ -396,7 +375,21 @@ class Econobot {
 
                     const index = Number(body) - 1;
 
-                    const { items } = itemsListInMemoryRepository.getItemsList(number);
+                    const lastItems = itemsListInMemoryRepository.getItemsList(number);
+
+                    if( !lastItems ){
+
+                        await this.say(`Infelizmente ocorreu um erro e não consegui obter a sua lista de pesquisa 😢. Por gentileza, pesquise novamente o produto !`);
+
+                        userRepository.setCurrentStep(user.id,"SEARCH_PRODUCT");
+
+                        return
+
+                    }
+
+                    await userRepository.setCurrentStep(user.id,"SELECT_PRODUCT_QUANTY");
+
+                    const { items } = lastItems;
 
                     if( !items[index] ){
 
@@ -411,9 +404,7 @@ class Econobot {
                     userLastSelectedItemInMemoryRepository.addSelectedItem({
                         id: user.id,
                         selected_item: items[index]
-                    })
-
-                    await userRepository.setCurrentStep(user.id,"SELECT_PRODUCT_QUANTY");
+                    });
 
 
                 },
@@ -426,9 +417,9 @@ class Econobot {
 
                     if( !item ){
 
-                        await this.say(`${user.nome_completo}, Não identifiquei aqui o item ao qual você está se referindo para adicionar esta quantidade.\n\n*Por gentileza, pesquise novamente algum produto para que eu possa prosseguir no seu atendimento !*`);
-                        
                         userRepository.setCurrentStep(user.id,"SEARCH_PRODUCT");
+                        
+                        await this.say(`${user.nome_completo}, Não identifiquei aqui o item ao qual você está se referindo para adicionar esta quantidade.\n\n*Por gentileza, pesquise novamente algum produto para que eu possa prosseguir no seu atendimento !*`);
 
                         return
 
@@ -450,11 +441,16 @@ class Econobot {
                         quantidade: body
                     });
 
-                    await this.say(`*Perfeito ! acabei de adicionar ${body}x quantidade(s) de ${produto} ao seu carrinho 😉*"`);
+                    await userRepository.setCurrentStep(user.id,"SEARCH_PRODUCT");
 
-                    await this.say(`Deseja adicionar mais algum produto desta lista ?\nCaso queira, digite "sim", do contrário, digite *carrinho* para gerenciar seu pedido e realizar ações como modificar quantidade, remover, limpar seu carrinho ou finalizar seu pedido 😁.`);
+                    await this.say(`*Perfeito ! adicionei ${body}X quantidade(s) de ${produto.toUpperCase()} ao seu carrinho 😉*"`);
 
-                    await userRepository.setCurrentStep(user.id,"CHOOSE_OPTION_AFTER_SEARCH_PRODUCT");
+                    itemsListInMemoryRepository.removeItemsList(user.id);
+
+                    userLastSelectedItemInMemoryRepository.removeSelectedItem(user.id);
+
+                    await this.say(`Qual(is) o(s) próximo(s) produto(s) que você gostaria de pesquisar?\n\n *Lembrando que você pode digitar "carrinho" a qualquer momento para gerenciar seu pedido 🛒`);
+
 
                 },
 
