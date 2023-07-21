@@ -19,6 +19,8 @@ class Econobot {
 
     defaultMessages
 
+    currentNumber
+
     constructor({ client, botName }){
 
         this.botName = botName
@@ -43,23 +45,25 @@ class Econobot {
 
             const { body, from: number } = message;
 
+            this.currentNumber = number;
+
             const user = await userRepository.findOne({
-                id: number
+                id: this.currentNumber
             });
         
             if( !user ){
 
-                const userInMemory = userInMemoryRepository.findOne(number);
+                const userInMemory = userInMemoryRepository.findOne(this.currentNumber);
 
                 if( !userInMemory ){
 
                     userInMemoryRepository.insert(new User(message.from,'WAITING_MESSAGE_NAME'));
 
-                    await this.say(number,`Olá ! me chamo ${this.botName} e sou o assistente virtual do ECONOCOMPRAS ! 😁🤖✌`);
+                    await this.say(`Olá ! me chamo ${this.botName} e sou o assistente virtual do ECONOCOMPRAS ! 😁🤖✌`);
         
-                    await this.say(number,'Notei que você é novo por aqui. Por tanto, para eu iniciar seu atendimento, peço que por gentileza me forneça algumas informações !');
+                    await this.say('Notei que você é novo por aqui. Por tanto, para eu iniciar seu atendimento, peço que por gentileza me forneça algumas informações !');
         
-                    await this.say(number,'Primeiramente, qual é seu nome completo ? 👀');
+                    await this.say('Primeiramente, qual é seu nome completo ? 👀');
 
                     return;
 
@@ -86,7 +90,7 @@ class Econobot {
 
                         userInMemory.setName(body);
 
-                        await this.say(userInMemory.id,'Agora peço me informe o seu telefone para contato 📳');
+                        await this.say('Agora peço me informe o seu telefone para contato 📳');
 
         
                     },
@@ -120,7 +124,7 @@ class Econobot {
         
                         await message.reply('Show !')
         
-                        await this.say(userInMemory.id,'E por último, mas não menos importante: seu endereço 📬');
+                        await this.say('E por último, mas não menos importante: seu endereço 📬');
 
         
                     },
@@ -146,9 +150,9 @@ class Econobot {
                             numero_telefone
                         });
         
-                        await this.say(userInMemory.id,'Perfeito ! seu cadastro está completo 😎😆');
+                        await this.say('Perfeito ! seu cadastro está completo 😎😆');
 
-                        await this.say(userInMemory.id,this.defaultMessages.selectMenuOption);
+                        await this.say(this.defaultMessages.selectMenuOption);
 
                         userInMemoryRepository.delete(number);
 
@@ -168,13 +172,13 @@ class Econobot {
 
             if( !user.current_step ){
 
-                await this.say(user.id,`Olá, ${user.nome_completo} ! Que bom ver você de novo por aqui 😁 \n Com o que posso auxiliar você ? `)
+                await this.say(`Olá, ${user.nome_completo} ! Que bom ver você de novo por aqui 😁 \n Com o que posso auxiliar você ? `)
 
                 const userShoppingCart = await shoppingCartRepository.getShoppingCart(user.id);
 
                 if( userShoppingCart.length > 0 ){
 
-                    await this.say(user.id,`Notei que você tem itens adicionados no seu carrinho !\nDeseja continuar suas compras ?`);
+                    await this.say(`Notei que você tem itens adicionados no seu carrinho !\nDeseja continuar suas compras ?`);
 
                     await userRepository.setCurrentStep(user.id,"SHOPPING_CART_CONTINUE_OPTIONS");
 
@@ -182,7 +186,7 @@ class Econobot {
 
                 }
 
-                await this.say(user.id,this.defaultMessages.selectMenuOption);
+                await this.say(this.defaultMessages.selectMenuOption);
 
                 await userRepository.setCurrentStep(user.id,"CHOOSE_MENU_OPTION");
 
@@ -202,7 +206,7 @@ class Econobot {
 
                 if( userShoppingCart.length === 0 ){
 
-                    await this.say(user.id,'Ops... parece que no momento você não tem nenhum item no seu carrinho 👀\n Que tal adicionar alguns itens?');
+                    await this.say('Ops... parece que no momento você não tem nenhum item no seu carrinho 👀\n Que tal adicionar alguns itens?');
 
                     return
 
@@ -220,14 +224,14 @@ class Econobot {
 
                 for await( const product of productsWithCalcPerItem ){
 
-                    await this.say(user.id,`*${product.produto}*\n*${product.quantidade}* *UND X ${toBRL(product.preco)} - ${toBRL(product.total)}*`);
+                    await this.say(`*${product.produto}*\n*${product.quantidade}* *UND X ${toBRL(product.preco)} - ${toBRL(product.total)}*`);
 
                 }
 
-                await this.say(user.id,`*Valor total ${toBRL(totalShoppingCart)}*`);
+                await this.say(`*Valor total ${toBRL(totalShoppingCart)}*`);
 
 
-                await this.say(user.id,`*O que deseja fazer ? digite a opção desejada.*\n\n1 - Pesquisar novo(s) produto(s)\n2 - Deletar Produto\n3 - Alterar quantidade de produto\n4 - Limpar carrinho\n5 - Finalizar pedido`);
+                await this.say(`*O que deseja fazer ? digite a opção desejada.*\n\n1 - Pesquisar novo(s) produto(s)\n2 - Deletar Produto\n3 - Alterar quantidade de produto\n4 - Limpar carrinho\n5 - Finalizar pedido`);
                 
                 await userRepository.setCurrentStep(user.id,"USER_SHOPPING_MANAGER_OPTIONS");
 
@@ -241,7 +245,7 @@ class Econobot {
 
                 userLastSelectedItemInMemoryRepository.removeSelectedItem(user.id);
 
-                await this.say(user.id,`Certo. Até breve, ${user.nome_completo} !`)
+                await this.say(`Certo. Até breve, ${user.nome_completo} !`)
         
                 return
 
@@ -263,7 +267,7 @@ class Econobot {
 
                             itemsListInMemoryRepository.removeItemsList(user.id);
 
-                            await this.say(user.id,'Qual o produto que você gostaria de pesquisar?');
+                            await this.say('Qual o produto que você gostaria de pesquisar?');
 
                             await userRepository.setCurrentStep(user.id,"SEARCH_PRODUCT");
 
@@ -275,7 +279,7 @@ class Econobot {
 
                         "default": async () =>{
 
-                            await this.say(number,"Opção inválida !");
+                            await this.say("Opção inválida !");
 
                         }
 
@@ -301,9 +305,9 @@ class Econobot {
 
                             if( userShoppingCart.length === 0 ){
 
-                                await this.say(user.id,`${user.nome_completo}, Antes de partir para as compras, irei dar uma breve introdução sobre minhas funcionalidades.\n\nPara adicionar um produto ao seu carrinho, basta digitar o número correspondente do produto na lista para que eu possa identifica-lo.\n\nPara gerênciar seu carrinho, você pode digitar a qualquer momento *carrinho*`)
+                                await this.say(`${user.nome_completo}, Antes de partir para as compras, irei dar uma breve introdução sobre minhas funcionalidades.\n\nPara adicionar um produto ao seu carrinho, basta digitar o número correspondente do produto na lista para que eu possa identifica-lo.\n\nPara gerênciar seu carrinho, você pode digitar a qualquer momento *carrinho*`)
 
-                                await this.say(user.id,'Dito isso, qual produto você gostaria de pesquisar ? 😁');
+                                await this.say('Dito isso, qual produto você gostaria de pesquisar ? 😁');
 
 
                             }
@@ -327,7 +331,7 @@ class Econobot {
 
                 'SEARCH_PRODUCT': async () => {
 
-                    await this.say(user.id,'Aguarde um momento enquanto eu consulto aqui nossas prateleiras 😉 !');
+                    await this.say('Aguarde um momento enquanto eu consulto aqui nossas prateleiras 😉 !');
 
                     const products = await productRepository.findAll({
                         codigo_barras: body,
@@ -345,7 +349,7 @@ class Econobot {
 
                     await Promise.all(products.map(async ( product, id )=>{
 
-                        await this.say(user.id,`${id+=1} - *PRODUTO: ${product.produto}* *CÓDIGO DE BARRAS: ${product.codigo_barra}* *${toBRL(product.preco)}*`)
+                        await this.say(`${id+=1} - *PRODUTO: ${product.produto}* *CÓDIGO DE BARRAS: ${product.codigo_barra}* *${toBRL(product.preco)}*`)
 
                     }));
 
@@ -366,7 +370,7 @@ class Econobot {
 
                         "sim": async () => {
 
-                            await this.say(user.id,'Qual o outro item da lista que você gostaria de adicionar ?');
+                            await this.say('Qual o outro item da lista que você gostaria de adicionar ?');
 
                             userLastSelectedItemInMemoryRepository.removeSelectedItem(number);
 
@@ -402,7 +406,7 @@ class Econobot {
 
                     }
 
-                    await this.say(user.id,`Qual a quantidade de "${items[index].produto}" que você gostaria de adicionar ao seu carrinho ?`);
+                    await this.say(`Qual a quantidade de "${items[index].produto}" que você gostaria de adicionar ao seu carrinho ?`);
 
                     userLastSelectedItemInMemoryRepository.addSelectedItem({
                         id: user.id,
@@ -422,7 +426,7 @@ class Econobot {
 
                     if( !item ){
 
-                        await this.say(user.id,`${user.nome_completo}, Não identifiquei aqui o item ao qual você está se referindo para adicionar esta quantidade.\n\n*Por gentileza, pesquise novamente algum produto para que eu possa prosseguir no seu atendimento !*`);
+                        await this.say(`${user.nome_completo}, Não identifiquei aqui o item ao qual você está se referindo para adicionar esta quantidade.\n\n*Por gentileza, pesquise novamente algum produto para que eu possa prosseguir no seu atendimento !*`);
                         
                         userRepository.setCurrentStep(user.id,"SEARCH_PRODUCT");
 
@@ -446,9 +450,9 @@ class Econobot {
                         quantidade: body
                     });
 
-                    await this.say(user.id,`*Perfeito ! acabei de adicionar ${body}x quantidade(s) de ${produto} ao seu carrinho 😉*"`);
+                    await this.say(`*Perfeito ! acabei de adicionar ${body}x quantidade(s) de ${produto} ao seu carrinho 😉*"`);
 
-                    await this.say(user.id,`Deseja adicionar mais algum produto desta lista ?\nCaso queira, digite "sim", do contrário, digite *carrinho* para gerenciar seu pedido e realizar ações como modificar quantidade, remover, limpar seu carrinho ou finalizar seu pedido 😁.`);
+                    await this.say(`Deseja adicionar mais algum produto desta lista ?\nCaso queira, digite "sim", do contrário, digite *carrinho* para gerenciar seu pedido e realizar ações como modificar quantidade, remover, limpar seu carrinho ou finalizar seu pedido 😁.`);
 
                     await userRepository.setCurrentStep(user.id,"CHOOSE_OPTION_AFTER_SEARCH_PRODUCT");
 
@@ -462,7 +466,7 @@ class Econobot {
 
                         '1': async () => {
 
-                            await this.say(user.id,`${user.nome_completo}, por favor, confirme se seu endereço está correto:\n\n${user.endereco}`);
+                            await this.say(`${user.nome_completo}, por favor, confirme se seu endereço está correto:\n\n${user.endereco}`);
 
                         },
 
@@ -497,7 +501,7 @@ class Econobot {
     }
 
 
-    async say(number,message,withDelay = true){
+    async say(message,withDelay = true){
 
         if( withDelay ){
 
@@ -505,7 +509,7 @@ class Econobot {
 
         }
 
-        await this.client.sendMessage(number,message);
+        await this.client.sendMessage(this.currentNumber,message);
         
 
     }
