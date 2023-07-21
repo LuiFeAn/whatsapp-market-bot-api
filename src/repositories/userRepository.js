@@ -6,7 +6,24 @@ class UserRepository {
     async findOne({numero_telefone,id}){
 
         const [ result ] = await query('ECONOBOT',{
-            query:'SELECT * FROM clientes WHERE numero_telefone = ? OR id = ?',
+            query:`
+
+                SELECT 
+                usuarios.id,nome_completo,current_step,
+                usuario_informacoes.endereco,usuario_informacoes.numero_telefone,
+                niveis_acesso.nivel_acesso 
+                FROM usuarios
+                LEFT JOIN usuario_informacoes
+                ON usuario_informacoes.usuario_id = usuarios.id
+                JOIN niveis_acesso
+                ON niveis_acesso.id = usuarios.nivel_acesso_id
+                WHERE 
+                usuario_informacoes.numero_telefone = ? 
+                OR 
+                usuarios.id = ?
+
+
+            `,
             values: [ numero_telefone, id ]
         });
 
@@ -14,37 +31,19 @@ class UserRepository {
 
     }
 
-    async insert({ id, nome_completo, numero_telefone,endereco, current_step }){
+    async insertUser({ id, nome_completo, current_step, nivel_acesso_id }){
 
         query('ECONOBOT',{
-            query:'INSERT INTO clientes VALUES(?,?,?,?,?)',
-            values:[id,nome_completo.toUpperCase(),numero_telefone,endereco.toUpperCase(),current_step.toUpperCase()]
+            query:'INSERT INTO usuarios VALUES(?,?,?,?)',
+            values:[id,nome_completo.toUpperCase(),current_step,nivel_acesso_id]
         });
-
-    }
-
-    setUsername(id,username){
-
-        query('ECONOBOT',
-        {
-            query:'UPDATE clientes SET nome_completo = ? WHERE id = ?',
-            values:[username,id]
-        })
-
-    }
-
-    setPhoneNumber(id,phone){
-
-    }
-
-    setAdress(id,adress){
 
     }
 
     async setCurrentStep(id,step){
         query('ECONOBOT',
         {
-            query:'UPDATE clientes SET current_step = ? WHERE id = ?',
+            query:'UPDATE usuarios SET current_step = ? WHERE id = ?',
             values:[step,id]
         })
     }

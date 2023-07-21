@@ -9,13 +9,16 @@ CREATE TABLE niveis_acesso(
 
 );
 
+
+INSERT INTO niveis_acesso VALUES(NULL,'CLIENTE');
+
 CREATE TABLE usuarios(
 
     id VARCHAR(30) NOT NULL PRIMARY KEY,
     nome_completo VARCHAR(100) NOT NULL,
     current_step VARCHAR(250),
     nivel_acesso_id INT(10) NOT NULL,
-    FOREIGN KEY (nivel_acesso_id) REFERENCES niveis_acesso(id)
+    FOREIGN KEY (nivel_acesso_id) REFERENCES niveis_acesso(id) ON DELETE CASCADE ON UPDATE CASCADE
 
 );
 
@@ -25,7 +28,7 @@ CREATE TABLE usuario_informacoes(
     usuario_id VARCHAR(30) NOT NULL,
     numero_telefone VARCHAR(25) NOT NULL,
     endereco VARCHAR(500) NOT NULL,
-    FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE ON UPDATE CASCADE
 
 );
 
@@ -45,7 +48,9 @@ CREATE TABLE usuario_carrinho(
     id int(10) NOT NULL PRIMARY KEY AUTO_INCREMENT,
     usuario_id VARCHAR(30) NOT NULL,
     produto_id INT(10) NOT NULL,
+    quantidade INT(10) NOT NULL,
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
     FOREIGN KEY (produto_id) REFERENCES produtos(id)
 
-)
+);
+
