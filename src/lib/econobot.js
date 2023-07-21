@@ -8,6 +8,7 @@ const shoopingInMemoryRepository = require('../repositories/shoopingInMemoryRepo
 const itemsListInMemoryRepository = require("../repositories/itemsListInMemoryRepository");
 const qrCodeTerminal = require("qrcode-terminal");
 const User = require("./user");
+const toBRL = require('../utils/toBRL');
 
 class Econobot {
 
@@ -195,11 +196,11 @@ class Econobot {
 
                 for await( const product of productsWithCalcPerItem ){
 
-                    await this.say(user.id,`*${product.produto}*\n*${product.quanty}* *UND X ${product.preco} - R$ ${product.total}*`,false);
+                    await this.say(user.id,`*${product.produto}*\n*${product.quanty}* *UND X ${toBRL(product.preco)} - ${toBRL(product.total)}*`);
 
                 }
 
-                await this.say(user.id,`Valor total ${totalShoppingCart}`,false);
+                await this.say(user.id,`*Valor total ${toBRL(totalShoppingCart)}*`);
 
 
                 await this.say(user.id,`*O que deseja fazer ? digite a opção desejada.*\n\n1 - Pesquisar novo(s) produto(s)\n2 - Deletar Produto\n3 - Alterar quantidade de produto\n4 - Limpar carrinho\n5 - Finalizar pedido`);
@@ -324,7 +325,7 @@ class Econobot {
 
                     await Promise.all(products.map(async ( product, id )=>{
 
-                        await this.say(user.id,`${id+=1} - *PRODUTO: ${product.produto}* *CÓDIGO DE BARRAS: ${product.codigo_barra}* *R$ ${product.preco}*`)
+                        await this.say(user.id,`${id+=1} - *PRODUTO: ${product.produto}* *CÓDIGO DE BARRAS: ${product.codigo_barra}* *${toBRL(product.preco)}*`)
 
                     }));
 
