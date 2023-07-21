@@ -10,11 +10,9 @@ class UserInMemmoryRepository {
 
     }
 
-    insert(id){
+    insert(user){
 
-        this.users.push({
-            id
-        });
+       this.users.push(user);
 
     }
 
@@ -26,36 +24,12 @@ class UserInMemmoryRepository {
         
     }
 
-    findAll(){
+    delete(id){
 
-        return this.users;
-
-    }
-
-    delete(numero_telefone){
-
-        this.users.filter( user => user.numero_telefone === numero_telefone );
+        this.users.filter( user => user.id === id );
 
     }
 
-    update({id,nome_completo,numero_telefone,endereco}){
-
-        this.users = this.users.map(function(user){
-
-            if( user.id === id ){
-
-                return {
-                    id,
-                    nome_completo: nome_completo ?? user.nome_completo,
-                    numero_telefone: numero_telefone ?? user.numero_telefone,
-                    endereco: endereco ?? user.endereco
-                }
-
-            }
-
-        })
-
-    }
 
 }
 

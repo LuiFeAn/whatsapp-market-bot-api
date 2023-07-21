@@ -14,13 +14,39 @@ class UserRepository {
 
     }
 
-    async insert({ id, nome_completo, numero_telefone,endereco }){
+    async insert({ id, nome_completo, numero_telefone,endereco, current_step }){
 
         query('ECONOBOT',{
-            query:'INSERT INTO clientes VALUES(?,?,?,?)',
-            values:[id,nome_completo.toUpperCase(),numero_telefone,endereco.toUpperCase()]
+            query:'INSERT INTO clientes VALUES(?,?,?,?,?)',
+            values:[id,nome_completo.toUpperCase(),numero_telefone,endereco.toUpperCase(),current_step.toUpperCase()]
         });
 
+    }
+
+    setUsername(id,username){
+
+        query('ECONOBOT',
+        {
+            query:'UPDATE clientes SET nome_completo = ? WHERE id = ?',
+            values:[username,id]
+        })
+
+    }
+
+    setPhoneNumber(id,phone){
+
+    }
+
+    setAdress(id,adress){
+
+    }
+
+    async setCurrentStep(id,step){
+        query('ECONOBOT',
+        {
+            query:'UPDATE clientes SET current_step = ? WHERE id = ?',
+            values:[step,id]
+        })
     }
 
 }
