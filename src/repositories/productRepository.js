@@ -9,7 +9,7 @@ class ProductRepository {
 
         return query('ECONOBOT',{
             query: 'SELECT * FROM produtos WHERE produto LIKE ? OR codigo_barra LIKE ?',
-            values:[`${product}%`,`${codigo_barras}%`]
+            values:[`%${product}%`,`${codigo_barras}%`]
         })
 
     }
