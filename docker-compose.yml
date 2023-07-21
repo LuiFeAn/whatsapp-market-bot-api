@@ -1,0 +1,19 @@
+version: "3.9"
+
+services:
+
+  mysql:
+    image: mysql:latest 
+    container_name: ECONOBOT_DB
+    environment:
+      MYSQL_ROOT_PASSWORD: ${ECONOBOT_ROOT_PASSWOR}
+      MYSQL_DATABASE: ${ECONOBOT_DB_NAME}
+      MYSQL_USER: ${ECONOBOT_DB_USER}
+      MYSQL_PASSWORD: ${ECONOBOT_DB_PASSWORD}
+    ports:
+      -"${ECONOBOT_DB_PORT}:$ECONOBOT_DB_PORT}"
+    volumes:
+      - mysql_data:/var/lib/mysql 
+
+volumes:
+  mysql_data: # Volume para persistência dos dados do MySQL
