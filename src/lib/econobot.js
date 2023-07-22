@@ -281,11 +281,11 @@ class Econobot {
 
             await userRepository.setCurrentStep(user.id,"USER_SHOPPING_MANAGER_OPTIONS");
 
-            "for await( const product of productsWithCalcPerItem ){
+            for await( const product of productsWithCalcPerItem ){
 
                 await this.say(`*ID: ${product.produto_id}\nProduto: ${product.nome_produto}* *${product.quantidade}* *UND X ${toBRL(product.valor_produto)} - ${toBRL(product.total)}*`);
 
-            }"
+            }
 
             await this.say(`*Valor total ${toBRL(totalShoppingCart)}*`);
 
@@ -306,6 +306,7 @@ class Econobot {
     
             return
 
+        
         }
 
         
@@ -633,13 +634,13 @@ class Econobot {
                 
                         const qrCode = await payload.base64();
 
-                        const image = new MessageMedia("image/jpeg",qrCode, "image.jpg");
-
-                        await this.say(image);
-
-                        await this.say('Após efetuar o pagamento, por gentileza envie um print do comprovante 😁');
-
                         console.log(qrCode);
+
+                        // const media = new MessageMedia('image/png',qrCode,'imagem.png');
+
+                        // await this.say(image);
+
+                        // await this.say('Após efetuar o pagamento, por gentileza envie um print do comprovante 😁');
 
                     },
 
