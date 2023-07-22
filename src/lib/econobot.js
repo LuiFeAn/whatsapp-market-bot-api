@@ -28,7 +28,6 @@ class Econobot {
     botName
 
     defaultMessages
-    
 
     currentNumber
 
