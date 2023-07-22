@@ -82,6 +82,15 @@ class Econobot {
 
     }
 
+
+    async sendMessageMediaMedia(mimeType,data,fileName){
+
+        const media = new MessageMedia(mimeType,data,fileName);
+
+        await this.say(media);
+
+    }
+
     async handleMessage(message){
 
         this.currentNumber = message.from;
@@ -260,10 +269,9 @@ class Econobot {
 
         }
 
-
         const lowerMessage = message.body.toLowerCase();
 
-        if( lowerMessage.includes("carrinho")){
+        if( lowerMessage.includes("carrinho") && userShoppingCart?.length > 0){
 
             await message.reply('Aguarde enquanto busco aqui seu carrinho... É rápidinho ! 😉');
 
@@ -364,9 +372,11 @@ class Econobot {
 
                     "5": async () => {
 
-                        await userRepository.setCurrentStep(user.id,"PAYMENT_OPTIONS");
+                        await userRepository.setCurrentStep(user.id,"CONFIRM_ADRESS");
 
-                        await this.say("*Qual seria a forma de pagamento ?*\n 1 - Cartão de crédito\n2 - Cartão de débito\n3 - PIX\n4 - Pagar na entrega");
+                        await this.say(`Antes de continuarmos, por favor, confirme se seu endereço está correto:\n\n*${user.endereco}*`);
+
+                        await this.say('Você confirma este endereço ?\n S - Sim\nN - Não');
 
                     },
 
@@ -588,8 +598,6 @@ class Econobot {
 
             "PAYMENT_OPTIONS": async () => {
 
-                await this.say(`${user.nome_completo}, por favor, confirme se seu endereço está correto:\n\n${user.endereco}`);
-
                 const validPayment = ['1','2','3'];
 
                 const handlePayment = {
@@ -603,17 +611,13 @@ class Econobot {
 
                     },
 
+                    '4': async () => {
+                        
+                    },
+
                     "3": async () => {
 
                         const userShoppingCart = await shoppingCartService.calcUserTotalShoppingCart(user.id);
-
-                        if( userShoppingCart.length === 0 ){
-
-                            await this.say('Por gentileza, adicione algum item ao seu carrinho para que possa finalizar o pedido');
-
-                            return
-
-                        }
 
                         const {  totalShoppingCart } = userShoppingCart;
 
@@ -634,13 +638,23 @@ class Econobot {
                 
                         const qrCode = await payload.base64();
 
-                        console.log(qrCode);
+                        const [ resourceType, base64String ] = qrCode.split(',');
 
-                        // const media = new MessageMedia('image/png',qrCode,'imagem.png');
+                        await this.sendMessageMediaMedia('image/jpg',base64String,'image.jpg');
 
-                        // await this.say(image);
+                        await this.say('Após efetuar o pagamento, por gentileza envie um print do comprovante 😁');
 
-                        // await this.say('Após efetuar o pagamento, por gentileza envie um print do comprovante 😁');
+                    },
+
+                    "CONFIRM_ADRESS": async () => {
+
+                        if( lowerMessage.includes('n') ){
+                            
+                            await this.say('Perfeito ! obrigado por confirmar seu endereço 😍');
+
+                            return
+
+                        }
 
                     },
 
