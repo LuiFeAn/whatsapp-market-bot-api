@@ -35,11 +35,12 @@ CREATE TABLE usuario_informacoes(
 CREATE TABLE produtos(
 
     id INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    codigo_barra VARCHAR(250),
-    produto VARCHAR(250) NOT NULL,
-    descricao VARCHAR(500) NOT NULL,
-    estoque INT(10) NOT NULL,
-    preco DECIMAL(10,2) NOT NULL
+    Codigo_Barra VARCHAR(250),
+    Descricao VARCHAR(250) NOT NULL,
+    Unidade_Compra VARCHAR(5) NOT NULL,
+    Estoque INT(10) NOT NULL,
+    precoUnitario DECIMAL(10,2) NOT NULL,
+    Disponibilidade BOOLEAN NOT NULL
 
 );
 
@@ -47,10 +48,11 @@ CREATE TABLE usuario_carrinho(
 
     id int(10) NOT NULL PRIMARY KEY AUTO_INCREMENT,
     usuario_id VARCHAR(30) NOT NULL,
-    produto_id INT(10) NOT NULL,
+    nome_produto VARCHAR(500) NOT NULL,
+    valor_produto DECIMAL(10,2) NOT NULL,
     quantidade INT(10) NOT NULL,
-    FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
-    FOREIGN KEY (produto_id) REFERENCES produtos(id)
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
 
 );
+
 

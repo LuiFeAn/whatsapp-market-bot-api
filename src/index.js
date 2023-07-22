@@ -1,6 +1,6 @@
 require('./server');
-const { Econobot } = require('./lib/econobot');
-const { Client, LocalAuth } = require('whatsapp-web.js');
+const { Econobot } = require('./lib/econoBot');
+const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 
 const bot = new Econobot({
     botName:'Econobot',
@@ -8,7 +8,7 @@ const bot = new Econobot({
         authStrategy: new LocalAuth({
            dataPath:'./wpp_auth'
         })
-    })
+    }),
 });
 
 bot.initialize();

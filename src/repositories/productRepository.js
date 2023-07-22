@@ -5,11 +5,11 @@ dotenv.config();
 
 class ProductRepository {
 
-    findAll({product,codigo_barras}){
+    findAll({descricao,codigo_barras}){
 
         return query('ECONOBOT',{
-            query: 'SELECT * FROM produtos WHERE produto LIKE ? OR codigo_barra LIKE ?',
-            values:[`%${product}%`,`${codigo_barras}%`]
+            query: 'SELECT * FROM produtos WHERE Descricao LIKE ? OR Codigo_Barra LIKE ?',
+            values:[`%${descricao}%`,`${codigo_barras}%`]
         })
 
     }

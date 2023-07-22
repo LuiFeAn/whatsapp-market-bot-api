@@ -1,10 +1,18 @@
 
 //Utilitários
 
+const { QrCodePix } = require("qrcode-pix"); 
 const delay = require('../utils/delay');
 const validPhoneNumber = require('../utils/isAPhoneNumber');
+const { v4 } = require("uuid");
 const qrCodeTerminal = require("qrcode-terminal");
 const { toBRL } = require('../utils/toBRL');
+const env = require("dotenv");
+const { MessageMedia } = require("whatsapp-web.js");
+
+env.config();
+
+const shoppingCartService = require("../services/shoppingCartService");
 
 //Repositórios
 
@@ -20,6 +28,9 @@ const UserInfosForm = require("./userForm");
 const userFormInMemoryRepository = require('../repositories/inMemory/userFormInMemoryRepository');
 const itemsListInMemoryRepository = require("../repositories/inMemory/itemsListInMemoryRepository");
 const userLastSelectedItemInMemoryRepository = require("../repositories/inMemory/userLastSelectedItemInMemoryRepository");
+const userLastMessageInMemoryRepository = require('../repositories/inMemory/userLastMessageInMemoryRepository');
+
+const clearMemoryService = require("../services/clearMemoryService");
 
 class Econobot {
 
@@ -74,6 +85,16 @@ class Econobot {
     async handleMessage(message){
 
         this.currentNumber = message.from;
+
+        const userLastMessage = userLastMessageInMemoryRepository.findLastMessage(this.currentNumber);
+
+        if( !userLastMessage ){
+
+            userLastMessageInMemoryRepository.addLastMessage(this.currentNumber);
+
+        }
+
+        userLastMessageInMemoryRepository.updateLastMessage(this.currentNumber,new Date());
 
         const botBusy = botBusyRepository.findOne(this.currentNumber);;
 
@@ -246,7 +267,7 @@ class Econobot {
 
             await message.reply('Aguarde enquanto busco aqui seu carrinho... É rápidinho ! 😉');
 
-            const userShoppingCart = await shoppingCartRepository.getShoppingCart(user.id);
+            const userShoppingCart = await shoppingCartService.calcUserTotalShoppingCart(user.id);
 
             if( userShoppingCart.length === 0 ){
 
@@ -256,26 +277,17 @@ class Econobot {
 
             }
 
+            const {  productsWithCalcPerItem, totalShoppingCart } = userShoppingCart;
+
             await userRepository.setCurrentStep(user.id,"USER_SHOPPING_MANAGER_OPTIONS");
 
-            const productsWithCalcPerItem = userShoppingCart.map( item => ({
-                ...item,
-                produto: item.produto.toUpperCase(),
-                total: ( item.quantidade * item.preco )
-            }));
+            "for await( const product of productsWithCalcPerItem ){
 
-            const totalShoppingCart = productsWithCalcPerItem.reduce((acc,item) => (
-                acc + item.total
-            ),0);
+                await this.say(`*ID: ${product.produto_id}\nProduto: ${product.nome_produto}* *${product.quantidade}* *UND X ${toBRL(product.valor_produto)} - ${toBRL(product.total)}*`);
 
-            for await( const product of productsWithCalcPerItem ){
-
-                await this.say(`*${product.produto}*\n*${product.quantidade}* *UND X ${toBRL(product.preco)} - ${toBRL(product.total)}*`);
-
-            }
+            }"
 
             await this.say(`*Valor total ${toBRL(totalShoppingCart)}*`);
-
 
             await this.say(`*O que deseja fazer ? digite a opção desejada.*\n\n1 - Pesquisar novo(s) produto(s)\n2 - Deletar Produto\n3 - Alterar quantidade de produto\n4 - Limpar carrinho\n5 - Finalizar pedido`);
             
@@ -288,8 +300,8 @@ class Econobot {
 
             await userRepository.setCurrentStep(user.id,null);
 
-            userLastSelectedItemInMemoryRepository.removeSelectedItem(user.id);
-
+            clearMemoryService.clearUserLastProductAndList(user.id);
+            
             await this.say(`Certo. Até breve, ${user.nome_completo} !`)
     
             return
@@ -302,7 +314,7 @@ class Econobot {
 
             'USER_SHOPPING_MANAGER_OPTIONS': async () => {
 
-                const valid = [ "1","2" ];
+                const valid = [ "1","2","3","4","5"];
 
                 const handleShoppingOptions = {
 
@@ -310,9 +322,7 @@ class Econobot {
 
                         await userRepository.setCurrentStep(user.id,"SEARCH_PRODUCT");
 
-                        userLastSelectedItemInMemoryRepository.removeSelectedItem(user.id);;
-
-                        itemsListInMemoryRepository.removeItemsList(user.id);
+                        clearMemoryService.clearUserLastProductAndList(user.id);
 
                         await this.say('Qual o produto que você gostaria de pesquisar?');
 
@@ -320,6 +330,42 @@ class Econobot {
                     },
 
                     "2": async () => {
+
+                        await this.say('Por gentileza, digite o ID do produto que você gostaria de remover do carrinho !');
+
+                        const product = await shoppingCartRepository.getOneItemFromShoppingCart(user.id,message.body);
+
+                        if( !product ){
+
+                            await this.say('Ops... parece que este produto não se encontra no seu carrinho. Por favor, digite o ID do produto que deseja remover do seu carrinho !');
+
+                            return
+
+                        }
+
+                        await shoppingCartRepository.removeItemFromShoppingCart(user.id,message.body);
+
+                        await this.say(`${user.nome_completo}, o "${product.nome_produto}" foi removido com sucesso do seu carrinho !`);
+
+                    },
+
+                    "3": async () => {
+
+                        await this.say('Por gentileza, digite o ID do produto que você gostaria de alterar a quantidade');
+
+                    },
+
+                    "4": async () => {
+
+                        shoppingCartRepository.removeAllItemsFromShoppingCart(user.id);
+
+                    },
+
+                    "5": async () => {
+
+                        await userRepository.setCurrentStep(user.id,"PAYMENT_OPTIONS");
+
+                        await this.say("*Qual seria a forma de pagamento ?*\n 1 - Cartão de crédito\n2 - Cartão de débito\n3 - PIX\n4 - Pagar na entrega");
 
                     },
 
@@ -379,10 +425,14 @@ class Econobot {
 
                 await this.say('Aguarde um momento enquanto eu consulto aqui nossas prateleiras 😉 !');
 
+                // Busca os produtos no banco de dados original ECONOCOMPRAS
+
                 const products = await productRepository.findAll({
                     codigo_barras: message.body,
-                    product: message.body
+                    descricao: message.body
                 });
+
+                //Valida tudo o que é necessário -> O item existe ? há estoque ?
 
                 if( products.length === 0 ){
 
@@ -392,12 +442,24 @@ class Econobot {
 
                 }
 
+                //Adiciona um novo "produto" em memória, que na verdade pe a opçção de não ter encontrado o produto desejado
 
-                await Promise.all(products.map(async ( product, id, items )=>{
+                products.push({ produto: 'Nenhuma das opções ',preco:'',codigo_barra:''});
+
+                await Promise.all(products.map(async ( product, id )=>{
 
                     const index = id+=1;
 
-                    await this.say(`Item: ${index}\nProduto: ${product.produto}\nValor: ${toBRL(product.preco.toString())}💰\nCódigo de Barras: ${product.codigo_barra}📊`);
+                    let defaultMessage = `Item: ${index}\nProduto: ${product.Descricao}\nValor: R$ ${product.precoUnitario} 💰\nCódigo de Barras: ${product.Codigo_Barra}📊`
+
+                    if( !product.precoUnitario || !product.Codigo_Barra ){
+
+                        defaultMessage = `${index} - Nenhuma das opções listadas acima`
+
+                    }
+
+                    await this.say(defaultMessage);
+
 
                 }));
 
@@ -423,7 +485,7 @@ class Econobot {
 
                 if( !lastItems ){
 
-                    await this.say(`Infelizmente ocorreu um erro e não consegui obter a sua lista de pesquisa 😢. Por gentileza, pesquise novamente o produto !`);
+                    await this.say(`Infelizmente ocorreu um erro e não consegui obter a sua última lista de pesquisa 😢. Por gentileza, pesquise novamente algum produto !`);
 
                     userRepository.setCurrentStep(user.id,"SEARCH_PRODUCT");
 
@@ -431,11 +493,11 @@ class Econobot {
 
                 }
 
-                await userRepository.setCurrentStep(user.id,"SELECT_PRODUCT_QUANTY");
-
                 const { items } = lastItems;
 
-                if( !items[index] ){
+                const product = items[index];
+
+                if( !product ){
 
                     await message.reply(`Desculpe, mas o item ${message.body} não foi listado. Por favor, selecione algum dos produtos que listei acima`);
 
@@ -443,11 +505,37 @@ class Econobot {
 
                 }
 
-                await this.say(`Qual a quantidade de "${items[index].produto}" que você gostaria de adicionar ao seu carrinho ?`);
+                //Verifica se o usuário já possui este produto no carrinho. Se sim, não poderá dar continuidade a adição
+
+                const userAlreadyHasProduct = await shoppingCartRepository.getOneItemFromShoppingCart(user.id,product.Descricao);
+
+                if( userAlreadyHasProduct ){
+
+                    await this.say(`${user.nome_completo}, você já possui ${product.Descricao} no seu carrinho.\n\nSe deseja adicionar mais quantidades deste item, digite *carrinho* e selecione a opção correspondente`);
+
+                    return;
+
+                }
+
+                if( index == items.length - 1 ){
+
+                    await userRepository.setCurrentStep(user.id,'SEARCH_PRODUCT');
+
+                    itemsListInMemoryRepository.removeItemsList(user.id);
+
+                    await this.say('Poxa ! lamento por não ter encontrado o produto que você desejava.\nQue tal realizar uma nova busca ? por gentileza, pesquise novamente o produto que deseja');
+
+                    return
+
+                }
+
+                await userRepository.setCurrentStep(user.id,"SELECT_PRODUCT_QUANTY");
+
+                await this.say(`Qual a quantidade de "${product.Descricao}" que você gostaria de adicionar ao seu carrinho ?`);
 
                 userLastSelectedItemInMemoryRepository.addSelectedItem({
                     id: user.id,
-                    selected_item: items[index]
+                    selected_item: product
                 });
 
 
@@ -457,17 +545,7 @@ class Econobot {
 
                 const quanty = Number(message.body);
 
-                const item = userLastSelectedItemInMemoryRepository.getSelectedItem(user.id);
-
-                if( !item ){
-
-                    userRepository.setCurrentStep(user.id,"SEARCH_PRODUCT");
-                    
-                    await this.say(`${user.nome_completo}, Não identifiquei aqui o item ao qual você está se referindo para adicionar esta quantidade.\n\n*Por gentileza, pesquise novamente algum produto para que eu possa prosseguir no seu atendimento !*`);
-
-                    return
-
-                }
+                const product = userLastSelectedItemInMemoryRepository.getSelectedItem(user.id);
 
                 if( !quanty ){
 
@@ -477,40 +555,91 @@ class Econobot {
 
                 }
 
-                const { selected_item:{ id: product_id , produto } } = item
+                if( !product ){
+
+                    userRepository.setCurrentStep(user.id,"SEARCH_PRODUCT");
+                    
+                    await this.say(`${user.nome_completo}, Não identifiquei aqui o item ao qual você está se referindo para adicionar esta quantidade.\n\n*Por gentileza, pesquise novamente algum produto para que eu possa prosseguir no seu atendimento !*`);
+
+                    return
+
+                }
+
+                const { selected_item } = product;
 
                 await shoppingCartRepository.insertToShoppingCart({
                     usuario_id: user.id,
-                    produto_id: product_id,
+                    nome_produto: selected_item.Descricao,
+                    valor_produto: selected_item.precoUnitario,
                     quantidade: message.body
                 });
 
                 await userRepository.setCurrentStep(user.id,"SEARCH_PRODUCT");
 
-                await this.say(`*Perfeito ! adicionei ${message.body}X quantidade(s) de ${produto.toUpperCase()} ao seu carrinho 😉*"`);
+                await this.say(`*Perfeito ! adicionei ${message.body}X quantidade(s) de ${selected_item.Descricao.toUpperCase()} ao seu carrinho 😉*"`);
 
-                itemsListInMemoryRepository.removeItemsList(user.id);
-
-                userLastSelectedItemInMemoryRepository.removeSelectedItem(user.id);
+                clearMemoryService.clearUserLastProductAndList(user.id);
 
                 await this.say(`Qual(is) o(s) próximo(s) produto(s) que você gostaria de pesquisar?\n\n *Lembrando que você pode digitar "carrinho" a qualquer momento para gerenciar seu pedido 🛒`);
 
 
             },
 
-            "GOTO_PAYMENT": async () => {
+            "PAYMENT_OPTIONS": async () => {
 
-                const validPayment = ['1','2'];
+                await this.say(`${user.nome_completo}, por favor, confirme se seu endereço está correto:\n\n${user.endereco}`);
+
+                const validPayment = ['1','2','3'];
 
                 const handlePayment = {
 
                     '1': async () => {
 
-                        await this.say(`${user.nome_completo}, por favor, confirme se seu endereço está correto:\n\n${user.endereco}`);
 
                     },
 
                     '2': async () => {
+
+                    },
+
+                    "3": async () => {
+
+                        const userShoppingCart = await shoppingCartService.calcUserTotalShoppingCart(user.id);
+
+                        if( userShoppingCart.length === 0 ){
+
+                            await this.say('Por gentileza, adicione algum item ao seu carrinho para que possa finalizar o pedido');
+
+                            return
+
+                        }
+
+                        const {  totalShoppingCart } = userShoppingCart;
+
+                        await this.say(`*Envie um PIX no valor de ${toBRL(totalShoppingCart)} para a seguinte chave:*`);
+
+                        await this.say(`*${process.env.ECONOCOMPRAS_PIX_USER}*`);
+
+                        await this.say('*É possível também realizar o pagamento escaneando o qrCode abaixo:*');
+
+                        const payload = QrCodePix({
+                            version: "01",
+                            key:process.env.ECONOCOMPRAS_PIX_KEY,
+                            name: process.env.ECONOCOMPRAS_PIX_USER,
+                            transactionId: v4().slice(25),
+                            message: "ECONOCOMPRAS",
+                            value: totalShoppingCart,
+                        });
+                
+                        const qrCode = await payload.base64();
+
+                        const image = new MessageMedia("image/jpeg",qrCode, "image.jpg");
+
+                        await this.say(image);
+
+                        await this.say('Após efetuar o pagamento, por gentileza envie um print do comprovante 😁');
+
+                        console.log(qrCode);
 
                     },
 
