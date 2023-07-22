@@ -1,6 +1,6 @@
 
 
-class UserInMemmoryRepository {
+class UserFormRepository {
 
     users
 
@@ -10,9 +10,9 @@ class UserInMemmoryRepository {
 
     }
 
-    insert(user){
+    insert(userForm){
 
-       this.users.push(user);
+       this.users.push(userForm);
 
     }
 
@@ -33,4 +33,4 @@ class UserInMemmoryRepository {
 
 }
 
-module.exports = new UserInMemmoryRepository();
+module.exports = new UserFormRepository;

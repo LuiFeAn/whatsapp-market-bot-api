@@ -1,6 +1,6 @@
 
 
-class User {
+class UserInfosForm {
 
     id
     nome_completo
@@ -42,4 +42,4 @@ class User {
 
 }
 
-module.exports = User;
+module.exports = UserInfosForm;
