@@ -49,7 +49,7 @@ class Econobot {
         this.client = client;
 
         this.defaultMessages = {
-            selectMenuOption:'Escolha a opção que deseja: \n1 - Pesquisar Produto(s)'
+            selectMenuOption:`A cada etapa algumas opções serão apresentadas para você escolher.\n*Basta você responder com o número ou a letra com a opção que deseja. Ok?!* 😁\nEscolha a opção que deseja:\n1 - Fazer pedido\n2 - Ver carrinho`
         }
 
         this.handleMessage = this.handleMessage.bind(this);
@@ -273,7 +273,7 @@ class Econobot {
 
             const lowerMessage = message.body.toLowerCase();
 
-            if( lowerMessage.includes("carrinho") && userShoppingCart?.length > 0){
+            if( lowerMessage === 'ver carrinho' ){
 
                 await message.reply('Aguarde enquanto busco aqui seu carrinho... É rápidinho ! 😉');
 
@@ -306,7 +306,7 @@ class Econobot {
 
             }
 
-            if( lowerMessage.includes("finalizar atendimento")){
+            if( lowerMessage === 'finalizar atendimento' ){
 
                 await userRepository.setCurrentStep(user.id,null);
 
