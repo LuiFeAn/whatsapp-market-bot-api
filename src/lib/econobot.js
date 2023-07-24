@@ -250,21 +250,6 @@ class Econobot {
         
             }
 
-            if( lowerMessage === 'v' || lowerMessage === 'voltar ao menu' ){
-
-                await userRepository.setCurrentStep(user.id,'CHOOSE_MENU_OPTION');
-
-                itemsListInMemoryRepository.removeItemsList(user.id);
-
-                await this.say('Certo, você foi redirecionado ao menu inicial 😉');
-
-                await this.say(this.defaultMessages.defaultMenuInitialMessages);
-
-                return
-
-            }
-
-
             if( !user.current_step ){
 
                 await this.say(`Olá, ${user.nome_completo} ! Que bom ver você de novo por aqui 😁. Como posso ajudar ?`)
@@ -280,7 +265,22 @@ class Econobot {
 
             }
 
-            if( lowerMessage === 'ver carrinho' ){
+            if(['vom','voltar ao menu'].includes(lowerMessage)){
+
+                await userRepository.setCurrentStep(user.id,'CHOOSE_MENU_OPTION');
+
+                itemsListInMemoryRepository.removeItemsList(user.id);
+
+                await this.say('Certo, você foi redirecionado ao menu inicial 😉');
+
+                await this.say(this.defaultMessages.defaultMenuInitialMessages);
+
+                return
+
+            }
+
+
+            if(['c','ver carrinho'].includes(lowerMessage)){
 
                 await message.reply('Aguarde enquanto busco aqui seu carrinho... É rápidinho ! 😉');
 
@@ -313,7 +313,7 @@ class Econobot {
 
             }
 
-            if( lowerMessage === 'finalizar atendimento' ){
+            if(['fa','finalizar atendimento'].includes(lowerMessage)){
 
                 await userRepository.setCurrentStep(user.id,null);
 
