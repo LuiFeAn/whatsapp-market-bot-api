@@ -16,7 +16,6 @@ CREATE TABLE usuarios(
 
     id VARCHAR(30) NOT NULL PRIMARY KEY,
     nome_completo VARCHAR(100) NOT NULL,
-    current_step VARCHAR(250),
     nivel_acesso_id INT(10) NOT NULL,
     FOREIGN KEY (nivel_acesso_id) REFERENCES niveis_acesso(id) ON DELETE CASCADE ON UPDATE CASCADE
 
