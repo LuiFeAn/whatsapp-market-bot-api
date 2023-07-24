@@ -1,46 +1,31 @@
-const mysql = require("mysql2");
+const typeorm = require("typeorm")
+const env = require("dotenv");
 
-const dotenv = require("dotenv");
+env.config();
 
-dotenv.config();
+const econoBotDataSource = new typeorm.DataSource({
+    type: "mysql",
+    host: process.env.ECONOBOT_DB_HOST,
+    port: process.env.ECONOBOT_DB_PORT,
+    username: process.env.ECONOBOT_DB_USER,
+    password: process.env.ECONOBOT_DB_PASSWORD,
+    database: process.env.ECONOBOT_DB_NAME,
+});
 
-const econoBotConfig = {
-    host:process.env.ECONOBOT_DB_HOST,
-    user:process.env.ECONOBOT_DB_USER,
-    password:process.env.ECONOBOT_DB_PASSWORD,
-    database:process.env.ECONOBOT_DB_NAME,
-    port:process.env.ECONOBOT_DB_PORT
-};
+( async () => {
 
-const econocomprasConfig = {
-    host:process.env.ECONOCOMPRAS_DB_HOST,
-    user:process.env.ECONOCOMPRAS_DB_USER,
-    password:process.env.ECONOCOMPRAS_DB_PASSWORD,
-    database:process.env.ECONOCOMPRAS_DB_NAME,
-    port:process.env.ECONOCOMPRAS_DB_PORT
-}
+    try{
 
-const econoBotConnection = mysql.createPool(econoBotConfig);
+        console.log('Conectado com sucesso ao banco Econobot !');
 
-const econoComprasConnection = mysql.createPool(econocomprasConfig);
+        await econoBotDataSource.initialize();
 
-function handleDbConnection(err,{ sucess, error }){
-    if( err) return console.log(error);
-    console.log(sucess);
-}
+    }catch(err){
 
-econoBotConnection.getConnection( error => handleDbConnection( error, {
-    sucess:'Conexão com o banco de dados ECONOBOT realizada com sucesso',
-    error:'Não foi possível estabelecer uma conexão com o banco de dados ECONOBOT'
-}));
+        console.log('Não foi possível estabelecer uma conexão com o banco')
 
-econoComprasConnection.getConnection( error => handleDbConnection( error, {
-    sucess:'Conexão com o banco de dados ECONOCOMPRAS realizada com sucesso',
-    error:'Não foi possível estabelecer uma conexão com o banco de dados ECONOCOMPRAS'
-}))
+    }
 
+})();
 
-module.exports = {
-    econoBotConnection,
-    econoComprasConnection,
-}
+module.exports = econoBotDataSource;
