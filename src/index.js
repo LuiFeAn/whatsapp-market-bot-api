@@ -12,3 +12,5 @@ const bot = new Econobot({
 });
 
 bot.initialize();
+
+module.exports = bot;

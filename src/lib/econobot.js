@@ -51,7 +51,9 @@ class Econobot {
 
         this.defaultMessages = {
             selectMenuOption:`*A cada etapa algumas opções serão apresentadas para você, e basta você responder com o número ou a letra da a opção desejada*\n\nVocê também pode digitar a qualquer momento as palavras chave *"ver carrinho" para gerencia-lo* e *"finalizar atendimento" para encerrar seu atendimento.*`,
-            defaultMenuInitialMessages:'*Escolha a opção desejada*\n1 - Fazer pedido'
+            initialMenu:'*Escolha a opção desejada*\n1 - Fazer pedido',
+            menuCheckout:"*O que deseja fazer ? digite a opção desejada.*\n\n1 - Pesquisar novo(s) produto(s)\n2 - Deletar Produto\n3 - Alterar quantidade de produto\n4 - Limpar carrinho\n5 - Finalizar pedido",
+            paymentMenu:"",
 
         }
 
@@ -231,14 +233,14 @@ class Econobot {
                             endereco,
                             numero_telefone
                         });
+                        
+                        userStateInMemoryRepository.addState(user.id,"CHOOSE_MENU_OPTION");
         
                         await this.say('Perfeito ! seu cadastro está completo 😎😆');
 
                         await this.say(this.defaultMessages.selectMenuOption);
 
                         userFormInMemoryRepository.delete(this.currentNumber);
-
-                        return;
                         
         
                     },
@@ -246,9 +248,7 @@ class Econobot {
         
                 }
         
-                await handleUserRegisterSteps[userInMemory.current_step]();
-
-                return
+                return await handleUserRegisterSteps[userInMemory.current_step]();
         
             }
 
@@ -264,10 +264,51 @@ class Econobot {
 
                 await this.say(this.defaultMessages.selectMenuOption);
 
-                await this.say(this.defaultMessages.defaultMenuInitialMessages);
+                await this.say(this.defaultMessages.initialMenu);
 
                 return;
 
+
+            }
+
+            if(['v','voltar'].includes(lowerMessage)){
+
+                const lastState = userStateInMemoryRepository.findState(user.id);
+
+                const { state_historic } = lastState;
+
+                //Pega o ultimo item da lista novamente
+
+                const lastStateHistoric = state_historic[ state_historic.length - 1];
+
+                if( lastStateHistoric === 'CHOOSE_MENU_OPTION' ){
+
+                    await this.say('Você já se encontra no menu inicial 😉');
+
+                    return
+
+                }
+
+                //Se voltar, retirar o último registro da lista...
+
+                state_historic.pop();
+
+                const lastStateVerificator = {
+
+                    "CHOOSE_MENU_OPTION": `Você voltou para a aba de menu principal.\n${this.defaultMessages.initialMenu}`,
+                    "SEARCH_PRODUCT": 'Você voltou para a aba de busca de produtos.\nPor favor, busque por algum item',
+                    "CHOOSE_ITEM":"Você voltou para a aba de seleção de produtos. Por favor, selecione novamente algum produto da lista.",
+                    "SELECT_PRODUCT_QUANTY":`Você voltou para a aba de seleção de quantidade. Por favor, selecione novamente a quantidade desejada para o item ao qual você selecionou`,
+                    "USER_SHOPPING_MANAGER_OPTIONS":`Você voltou para o menu checkout. ${this.defaultMessages.checkoutMenu}`,
+                    "PAYMENT_OPTIONS":`Você voltou para o menu de pagamento.\n${this.defaultMessages.paymentMenu}`
+
+                }
+
+                userStateInMemoryRepository.updateState(user.id,lastStateHistoric);
+
+                await this.say(lastStateVerificator[lastStateHistoric]);
+
+                return
 
             }
 
@@ -279,7 +320,7 @@ class Econobot {
 
                 await this.say('Certo, você foi redirecionado ao menu inicial 😉');
 
-                await this.say(this.defaultMessages.defaultMenuInitialMessages);
+                await this.say(this.defaultMessages.initialMenu);
 
                 return
 
@@ -312,7 +353,7 @@ class Econobot {
 
                 await this.say(`*Valor total ${toBRL(totalShoppingCart)}*`);
 
-                await this.say(`*O que deseja fazer ? digite a opção desejada.*\n\n1 - Pesquisar novo(s) produto(s)\n2 - Deletar Produto\n3 - Alterar quantidade de produto\n4 - Limpar carrinho\n5 - Finalizar pedido`);
+                await this.say(this.defaultMessages.menuCheckout);
                 
 
                 return
