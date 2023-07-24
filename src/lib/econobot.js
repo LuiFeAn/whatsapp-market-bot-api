@@ -228,7 +228,7 @@ class Econobot {
 
                     await this.say(this.defaultMessages.selectMenuOption);
 
-                    userFormInMemoryRepository.delete(user.id);
+                    userFormInMemoryRepository.delete(this.currentNumber);
 
                     return;
                     
