@@ -11,19 +11,21 @@ class UserStateInMemory {
 
     }
 
-    addStateToUser(id){
+    addState(id){
 
         this.userStates.push({
-            id: user,
-            currentState:'CHOOSE_MENU_OPTION',
-            lastState:''
+            id,
+            current_state:'CHOOSE_MENU_OPTION',
+            state_historic:["CHOOSE_MENU_OPTION"]
         });
 
     }
 
     findState(id){
 
-        const userState = this.userStates.find( userState => userState == id);
+        const userState = this.userStates.find( userState => userState.id == id);
+
+        return userState;
 
     }
 
@@ -35,13 +37,13 @@ class UserStateInMemory {
 
     }
 
-    updateState(id,current_state,last_state){
+    updateState(id,current_state){
 
         const userState = this.findState(id);
 
         userState.current_state = current_state;
 
-        userState.lastLastate = last_state;
+        userState.state_historic.push(current_state);
 
     }
 
