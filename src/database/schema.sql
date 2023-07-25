@@ -43,15 +43,24 @@ CREATE TABLE produtos(
 
 );
 
-CREATE TABLE usuario_carrinho(
 
-    id int(10) NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    usuario_id VARCHAR(30) NOT NULL,
+CREATE TABLE carrinhos(
+
+    id INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT(10) NOT NULL,
+    status VARCHAR(10) NOT NULL,
+    FOREIGN KEY usuario_id REFERENCES usuarios(id)
+
+);
+
+CREATE TABLE carrinho__items(
+
+    id INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    carrinho_id INT(10) NOT NULL,
     nome_produto VARCHAR(500) NOT NULL,
     valor_produto DECIMAL(10,2) NOT NULL,
     quantidade INT(10) NOT NULL,
-    FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
 
-);
+)
 
 

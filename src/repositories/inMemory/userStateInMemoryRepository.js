@@ -47,6 +47,31 @@ class UserStateInMemory {
 
     }
 
+    updateStateHistoric(id,newState){
+
+        const userState = this.findState(id);
+
+        userState.state_historic = newState;
+
+    }
+
+    removeLast(id,newHistoric){
+
+        this.userStates = this.userStates.map(function(userState){
+
+            if(userState.id === id ){
+
+                return{
+                    ...userState,
+                    state_historic: newHistoric
+                }
+
+            }
+
+        })
+
+    }
+
 }
 
 module.exports = new UserStateInMemory();
