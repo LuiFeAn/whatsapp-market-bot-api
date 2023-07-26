@@ -55,10 +55,10 @@ class Econobot {
 
         this.defaultMessages = {
             selectMenuOption:`*A cada etapa algumas opções serão apresentadas para você, e basta você responder com o número ou a letra da a opção desejada**`,
-            initialMenu:'*Escolha a opção desejada*\n1 - Fazer pedido\nC - Ver Carrinho',
+            initialMenu:'*Escolha a opção desejada*\n1 - Fazer pedido\n/C - Ver Carrinho',
             menuCheckout:"*O que deseja fazer ? digite a opção desejada.*\n\n1 - Pesquisar novo(s) produto(s)\n2 - Deletar Produto\n3 - Alterar quantidade de produto\n4 - Limpar carrinho\n5 - Finalizar pedido",
             paymentMenu:"",
-            quantyDefaultMessage:"Digite o nome do próximo produto desejado.\n\nC - Carrinho"
+            quantyDefaultMessage:"Digite o nome do próximo produto desejado.\n\n/C - Carrinho"
 
         }
 
@@ -265,7 +265,7 @@ class Econobot {
 
             }
 
-            if(['f','finalizar atendimento'].includes(lowerMessage)){
+            if(['/f','finalizar atendimento'].includes(lowerMessage)){
 
                 userStateInMemoryRepository.updateState(user.id,null);
 
@@ -278,7 +278,7 @@ class Econobot {
             
             }
 
-            if(['c','carrinho'].includes(lowerMessage)){
+            if(['/c','carrinho'].includes(lowerMessage)){
 
                 await message.reply('Aguarde enquanto busco aqui seu carrinho... É rápidinho ! 😉');
 
@@ -337,7 +337,7 @@ class Econobot {
 
                             userStateInMemoryRepository.updateState(user.id,"SEARCH_PRODUCT")
 
-                            await this.say(user.id,`Pesquise por algum produto.\n\nOpções:\nC - Carrinho`);
+                            await this.say(user.id,`Pesquise por algum produto.\n\nOpções:\n/C - Carrinho`);
 
                         },
 
@@ -387,7 +387,7 @@ class Econobot {
 
                         if( id === products.length - 1){
 
-                            productSearchList += `\n\n*N - Nenhuma das opções*\n\n*C - Carrinho*`;
+                            productSearchList += `\n\n*N - Nenhuma das opções*\n\n*/C - Carrinho*`;
 
                         }
 
