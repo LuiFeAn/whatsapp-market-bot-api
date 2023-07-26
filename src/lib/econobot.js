@@ -232,7 +232,7 @@ class Econobot {
         
                         await this.say(message.from,'Perfeito ! seu cadastro está completo 😎😆');
 
-                        await this.say(message.from,this.defaultMessages.selectMenuOption);
+                        await this.say(message.from,`${this.defaultMessages.selectMenuOption}\n${this.defaultMessages.initialMenu}`);
 
                         userFormInMemoryRepository.delete(message.from);
                         
@@ -282,17 +282,27 @@ class Econobot {
 
                 const cart = await cartService.getCart(user.id);
 
-                if( !cart ) return;
+                let noHasItems = 'Você não possui nenhum item no carrinho no momento.'
+
+                if( !cart ){
+
+                    await this.say(user.id,noHasItems);
+
+                    return
+
+                }
                 
                 const userShoppingCart = await cartItemsService.calcItems(cart.id);
 
                 if( userShoppingCart.length === 0 ){
 
-                    await this.say(user.id,'Você não possui nenhum item no carrinho no momento.');
+                    await this.say(user.id,noHasItems);
 
                     return;
 
                 }
+
+                clearMemoryService.clearUserLastProductAndList(user.id);
 
                 const {  productsWithCalcPerItem, totalShoppingCart } = userShoppingCart;
 
@@ -341,7 +351,7 @@ class Econobot {
 
                             userStateInMemoryRepository.updateState(user.id,"SEARCH_PRODUCT")
 
-                            await this.say(user.id,`Vamos lá. Digite o nome do produto desejado.\nOpções:\nC - Carrinho`);
+                            await this.say(user.id,`Pesquise por algum produto.\n\nOpções:\nC - Carrinho`);
 
                         },
 
