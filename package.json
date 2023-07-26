@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "dev":"npx nodemon"
   },
   "keywords": [],
   "author": "",
@@ -19,5 +20,7 @@
     "qrcode-terminal": "^0.12.0",
     "uuid": "^9.0.0",
     "whatsapp-web.js": "^1.21.0"
+  },"devDependencies": {
+    "nodemon": "^3.0.1"
   }
 }
