@@ -11,12 +11,30 @@ class CartItemsRepository {
 
     }
 
-    async remove(user_id,id){
+    async remove(cart_id,id){
 
         query("ECONOBOT",{
-            query:"DELETE FROM carrinho_items WHERE usuario_id = ? AND id = ?",
-            values:[user_id,id]
+            query:"DELETE FROM carrinho_items WHERE carrinho_id AND id = ?",
+            values:[cart_id,id]
         });
+
+    }
+
+    async find(cart_id,product_name){
+
+        return query("ECONOBOT",{
+            query:"SELECT * FROM carrinho_items WHERE carrinho_id = ? AND nome_produto = ?",
+            values:[cart_id,product_name]
+        });
+
+    }
+
+    async findAll(cart_id){
+
+        return query("ECONOBOT",{
+            query:"SELECT * FROM carrinho_items WHERE carrinho_id = ?",
+            values:[cart_id]
+        });        
 
     }
 

@@ -1,6 +1,6 @@
 const { econoBotConnection, econoComprasConnection } = require('./database');
 
-module.exports = function asyncQuery(db,{
+module.exports = function asyncQuery(db = "ECONOBOT",{
     query,
     values
 }){

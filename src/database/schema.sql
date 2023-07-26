@@ -47,20 +47,22 @@ CREATE TABLE produtos(
 CREATE TABLE carrinhos(
 
     id INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    usuario_id INT(10) NOT NULL,
+    usuario_id VARCHAR(30) NOT NULL,
     status VARCHAR(10) NOT NULL,
-    FOREIGN KEY usuario_id REFERENCES usuarios(id)
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE ON UPDATE CASCADE
 
 );
 
-CREATE TABLE carrinho__items(
+CREATE TABLE carrinho_items(
 
     id INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
     carrinho_id INT(10) NOT NULL,
     nome_produto VARCHAR(500) NOT NULL,
     valor_produto DECIMAL(10,2) NOT NULL,
     quantidade INT(10) NOT NULL,
+    FOREIGN KEY (carrinho_id) REFERENCES carrinhos(id) ON UPDATE CASCADE ON DELETE CASCADE
 
-)
+);
+
 
 

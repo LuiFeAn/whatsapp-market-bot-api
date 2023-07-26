@@ -12,6 +12,15 @@ class CartRepository {
 
     }
 
+    async get(user_id){
+
+        return query('ECONOBOT',{
+            query:'SELECT * FROM carrinhos WHERE usuario_id = ?',
+            values:[user_id]
+        })
+
+    }
+
     async remove(user_id){
 
         query("ECONOBOT",{
