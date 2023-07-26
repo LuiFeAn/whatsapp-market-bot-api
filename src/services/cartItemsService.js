@@ -57,11 +57,13 @@ class CartItemsService {
 
     }
 
-    removeItem(cart_id,product_name){
-
+    async removeItem(cart_id,id){
+        
+        cartItemsRepository.remove(cart_id,id);
+        
     }
 
-    updateItem(cart_id,product_name){
+    async updateItem(cart_id,product_name){
 
     }
 
