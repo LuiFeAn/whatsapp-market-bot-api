@@ -7,16 +7,18 @@ class ClearMemoryService {
 
         const items = itemsListInMemoryRepository.getItemsList(usuario_id);
 
-        console.log(items);
+        if( items.length > 0 ){
 
-        if( items?.length > 0 ){
             itemsListInMemoryRepository.removeItemsList(usuario_id);
+
         }
 
         const lastSelection = userLastSelectedItemInMemoryRepository.getSelectedItem(usuario_id);
 
         if( lastSelection ){
+
             userLastSelectedItemInMemoryRepository.removeSelectedItem(usuario_id);
+            
         }
 
     }
