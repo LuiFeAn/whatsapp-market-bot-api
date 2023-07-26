@@ -35,6 +35,8 @@ const clearMemoryService = require("../services/clearMemoryService");
 const cartService = require("../services/userCartService");
 const cartItemsService = require("../services/cartItemsService");
 
+const validIndex = require("../utils/validIndex");
+
 class Econobot {
 
     client
@@ -314,9 +316,11 @@ class Econobot {
 
                 productsWithCalcPerItem.forEach((product,id) => {
 
+                    const index = id += 1;
+
                     if( product.nome_produto ){
 
-                        shoppingList += `\n\n*Item: ${product.id} - ${product.nome_produto} - ${product.quantidade} UND X ${toBRL(product.valor_produto)} - ${toBRL(product.total)}* `
+                        shoppingList += `\n\n*Item: ${index} - ${product.nome_produto} - ${product.quantidade} UND X ${toBRL(product.valor_produto)} - ${toBRL(product.total)}* `
 
                     }
 
@@ -435,7 +439,7 @@ class Econobot {
 
                     const lastItems = itemsListInMemoryRepository.getItemsList(user.id);
 
-                    const index = Number(message.body) - 1;
+                    const index = validIndex(lowerMessage);
 
                     const { items } = lastItems;
 
@@ -514,8 +518,6 @@ class Econobot {
 
                             userStateInMemoryRepository.updateState(user.id,"SEARCH_PRODUCT");
 
-                            clearMemoryService.clearUserLastProductAndList(user.id);
-
                             await this.say(user.id,'Qual o produto que você gostaria de pesquisar?');
 
 
@@ -523,21 +525,9 @@ class Econobot {
 
                         "2": async () => {
 
-                            await this.say(user.id,'Por gentileza, digite o ID do produto que você gostaria de remover do carrinho !');
+                            userStateInMemoryRepository.updateState(user.id,"REMOVE_ITEM_FROM_CART");
 
-                            const product = await shoppingCartRepository.getOneItemFromShoppingCart(user.id,message.body);
-
-                            if( !product ){
-
-                                await this.say(user.id,'Ops... parece que este produto não se encontra no seu carrinho. Por favor, digite o ID do produto que deseja remover do seu carrinho !');
-
-                                return
-
-                            }
-
-                            await shoppingCartRepository.removeItemFromShoppingCart(user.id,message.body);
-
-                            await this.say(user.id,`${user.nome_completo}, o "${product.nome_produto}" foi removido com sucesso do seu carrinho !`);
+                            await this.say(user.id,'Por gentileza, digite o número do item que você gostaria de remover do carrinho !');
 
                         },
 
@@ -574,6 +564,28 @@ class Econobot {
                     const option = valid.find( option => option.includes(lowerMessage) );
 
                     handleShoppingOptions[ option ?? 'default']();
+
+                },
+
+                "REMOVE_ITEM_FROM_CART": async () => {
+
+                    const index = validIndex(lowerMessage);
+
+                    const cart = await cartService.getCart(user.id);
+
+                    const cartItems = await cartItemsService.findItems(cart.id);
+
+                    if( !cartItems[index] ){
+
+                        await message.reply('Este item não se encontra no seu carrinho');
+
+                        return
+
+                    }
+
+                    await cartItemsService.removeItem(user.id,cartItems[index].id);
+
+                    await this.say(user.id,`O produto "${cartItems[index].nome_produto}" foi removido do seu carrinho. Remova outro produto, ou se preferir, digite *c* para acessar o menu de checkout`);
 
                 },
 
