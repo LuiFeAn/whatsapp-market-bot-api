@@ -54,10 +54,11 @@ class Econobot {
         this.client = client;
 
         this.defaultMessages = {
-            selectMenuOption:`*A cada etapa algumas opções serão apresentadas para você, e basta você responder com o número ou a letra da a opção desejada**`,
-            initialMenu:'*Escolha a opção desejada*\n1 - Fazer pedido\n/C - Ver Carrinho',
+            selectMenuOption:`*A cada etapa algumas opções serão apresentadas para você, e basta você responder com o número ou a letra da a opção desejada*`,
+            initialMenu:'*Escolha a opção desejada*\n1 - Fazer pedido',
             menuCheckout:"*O que deseja fazer ? digite a opção desejada.*\n\n1 - Pesquisar novo(s) produto(s)\n2 - Deletar Produto\n3 - Alterar quantidade de produto\n4 - Limpar carrinho\n5 - Finalizar pedido",
             paymentMenu:"",
+            globalConfigs:"\n\n------------------------------\n\n*Configurações:*\n/C - Carrinho",
             quantyDefaultMessage:"Digite o nome do próximo produto desejado.\n\n/C - Carrinho"
 
         }
@@ -258,7 +259,7 @@ class Econobot {
 
                 await this.say(user.id,this.defaultMessages.selectMenuOption);
 
-                await this.say(user.id,this.defaultMessages.initialMenu);
+                await this.say(user.id,`${this.defaultMessages.initialMenu}${this.defaultMessages.globalConfigs}`);
 
                 return;
 
@@ -337,7 +338,7 @@ class Econobot {
 
                             userStateInMemoryRepository.updateState(user.id,"SEARCH_PRODUCT")
 
-                            await this.say(user.id,`Pesquise por algum produto.\n\nOpções:\n/C - Carrinho`);
+                            await this.say(user.id,`Pesquise por algum produto.${this.defaultMessages.globalConfigs}`);
 
                         },
 
