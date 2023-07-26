@@ -7,6 +7,8 @@ class ClearMemoryService {
 
         const items = itemsListInMemoryRepository.getItemsList(usuario_id);
 
+        console.log(items);
+
         if( items?.length > 0 ){
             itemsListInMemoryRepository.removeItemsList(usuario_id);
         }

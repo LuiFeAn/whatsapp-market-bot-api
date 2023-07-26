@@ -583,9 +583,9 @@ class Econobot {
 
                     }
 
-                    await cartItemsService.removeItem(user.id,cartItems[index].id);
+                    await cartItemsService.removeItem(cart.id,cartItems[index].id);
 
-                    await this.say(user.id,`O produto "${cartItems[index].nome_produto}" foi removido do seu carrinho. Remova outro produto, ou se preferir, digite *c* para acessar o menu de checkout`);
+                    await this.say(user.id,`O produto "${cartItems[index].nome_produto}" foi removido do seu carrinho. Remova outro produto, ou se preferir, digite *c* para acessar novamente o menu de checkout`);
 
                 },
 
