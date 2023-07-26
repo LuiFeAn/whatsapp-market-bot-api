@@ -14,7 +14,7 @@ class CartItemsRepository {
     async remove(cart_id,id){
 
         query("ECONOBOT",{
-            query:"DELETE FROM carrinho_items WHERE carrinho_id AND id = ?",
+            query:"DELETE FROM carrinho_items WHERE carrinho_id = ? AND id = ?",
             values:[cart_id,id]
         });
 
@@ -33,6 +33,15 @@ class CartItemsRepository {
 
         return query("ECONOBOT",{
             query:"SELECT * FROM carrinho_items WHERE carrinho_id = ?",
+            values:[cart_id]
+        });        
+
+    }
+
+    removeAll(cart_id){
+
+        query("ECONOBOT",{
+            query:"DELETE FROM carrinho_items WHERE carrinho_id = ?",
             values:[cart_id]
         });        
 

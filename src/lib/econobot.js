@@ -265,7 +265,7 @@ class Econobot {
 
             }
 
-            if(['fa','finalizar atendimento'].includes(lowerMessage)){
+            if(['f','finalizar atendimento'].includes(lowerMessage)){
 
                 userStateInMemoryRepository.updateState(user.id,null);
 
@@ -306,6 +306,8 @@ class Econobot {
 
                 clearMemoryService.clearUserLastProductAndList(user.id);
 
+                userLastSelectedItemInMemoryRepository.removeSelectedItem(user.id);
+
                 const {  productsWithCalcPerItem, totalShoppingCart } = userShoppingCart;
 
                 userStateInMemoryRepository.updateState(user.id,"USER_SHOPPING_MANAGER_OPTIONS");
@@ -320,7 +322,7 @@ class Econobot {
 
                     if( product.nome_produto ){
 
-                        shoppingList += `\n\n*Item: ${index} - ${product.nome_produto} - ${product.quantidade} UND X ${toBRL(product.valor_produto)} - ${toBRL(product.total)}* `
+                        shoppingList += `\n*Item: ${index} - ${product.nome_produto} - ${product.quantidade} UND X ${toBRL(product.valor_produto)} - ${toBRL(product.total)}* `
 
                     }
 
@@ -399,7 +401,7 @@ class Econobot {
 
                         if( product.Descricao && product.precoUnitario ){
 
-                            productSearchList += `\n\n*${index} - ${product.Descricao} - R$ ${product.precoUnitario}*`
+                            productSearchList += `\n*${index} - ${product.Descricao} - R$ ${product.precoUnitario}*`
 
                         }
 
@@ -426,10 +428,10 @@ class Econobot {
                 "CHOOSE_ITEM": async () => {
 
                     if( lowerMessage === 'n' ){
+                        
+                        itemsListInMemoryRepository.removeItemsList(user.id);
 
                         userStateInMemoryRepository.updateState(user.id,"SEARCH_PRODUCT");
-
-                        itemsListInMemoryRepository.removeItemsList(user.id);
 
                         await this.say(user.id,'Lamento não ter encontrado o produto que você deseja. Por gentileza, pesquise novamente pelo produto');
 
@@ -456,7 +458,7 @@ class Econobot {
                     const cart = await cartService.getCart(user.id);
 
                     const userAlreadyHasProduct = await cartItemsService.findItem(cart.id,product.Descricao);
-
+                    
                     if( userAlreadyHasProduct ){
 
                         await this.say(user.id,`${user.nome_completo}, você já possui "${product.Descricao}" no seu carrinho.\nPor favor, selecione outro produto da lista.\n\n*Se deseja adicionar mais quantidades deste item, digite c e selecione a "alterar quantidade*`);
@@ -464,6 +466,8 @@ class Econobot {
                         return;
 
                     }
+
+                    itemsListInMemoryRepository.removeItemsList(user.id);
 
                     userLastSelectedItemInMemoryRepository.addSelectedItem({
                         id: user.id,
@@ -497,11 +501,11 @@ class Econobot {
                         quanty: message.body
                     });
 
+                    userLastSelectedItemInMemoryRepository.removeSelectedItem(user.id);
+
                     userStateInMemoryRepository.updateState(user.id,"SEARCH_PRODUCT");
 
                     await this.say(user.id,`${message.body}X quantidade(s) de "${selected_item.Descricao}" adicionado(s) ao carrinho.`);
-
-                    clearMemoryService.clearUserLastProductAndList(user.id);
 
                     await this.say(user.id,this.defaultMessages.quantyDefaultMessage);
 
@@ -538,8 +542,14 @@ class Econobot {
                         },
 
                         "4": async () => {
+                            
+                            const cart = await cartService.getCart(user.id);
 
-                            shoppingCartRepository.removeAllItemsFromShoppingCart(user.id);
+                            await cartItemsService.removeAllItems(cart.id);
+
+                            userStateInMemoryRepository.updateState(user.id,"AFTER_CLEAR_CARR");
+
+                            await this.say(user.id,"Seu carrinho foi esvaziado. O que deseja fazer agora?\n1 - Fazer novo pedido\nf - Finalizar o atendimento");
 
                         },
 
@@ -585,7 +595,21 @@ class Econobot {
 
                     await cartItemsService.removeItem(cart.id,cartItems[index].id);
 
-                    await this.say(user.id,`O produto "${cartItems[index].nome_produto}" foi removido do seu carrinho. Remova outro produto, ou se preferir, digite *c* para acessar novamente o menu de checkout`);
+                    await this.say(user.id,`O produto "${cartItems[index].nome_produto}" foi removido do seu carrinho.\n*Remova outro produto, ou se preferir, digite c para acessar novamente o menu de checkout*`);
+
+                },
+
+                "AFTER_CLEAR_CAR": async () => {
+
+                    if( !["1"].includes(lowerMessage) ){
+
+                        await this.say(user.id,"Opção inválida");
+
+                        return
+
+                    }
+
+                    userStateInMemoryRepository.updateState(user.id,"SEARCH_PRODUCT");
 
                 },
 
