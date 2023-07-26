@@ -1,5 +1,5 @@
 const cartItemsRepository = require("../repositories/cartItemsRepository");
-const toBRL = require("../utils/toBRL");
+const { toBRL } = require("../utils/toBRL");
 const BotDefaultErrors = require("../errors/defaultError");
 
 class CartItemsService {
@@ -58,13 +58,23 @@ class CartItemsService {
 
     }
 
-    getStatus(cartItems,total){
+    async getStatus(cart_id){
+
+        const userShoppingCart = await this.calcItems(cart_id);
+
+        if( userShoppingCart.length === 0 ){
+
+            return;
+
+        }
+
+        const {  productsWithCalcPerItem, totalShoppingCart } = userShoppingCart;
 
         let shoppingList = ''
 
-        cartItems.push({nome_produto:'',quantidade:''});
+        productsWithCalcPerItem.push({nome_produto:'',quantidade:''});
 
-        cartItems.forEach((product,id) => {
+        productsWithCalcPerItem.forEach((product,id) => {
 
             const index = id += 1;
 
@@ -76,7 +86,7 @@ class CartItemsService {
 
             if( id == productsWithCalcPerItem.length - 1){
                 
-                shoppingList += `\n\n*Valor total ${toBRL(total)}*`
+                shoppingList += `\n\n*Valor total ${toBRL(totalShoppingCart)}*`
 
             }
 
@@ -98,7 +108,13 @@ class CartItemsService {
 
     }
 
-    async updateItem(cart_id,product_name){
+    async updateItem({ cart_id, item_id, quanty }){
+
+        cartItemsRepository.updateItem({
+            cart_id,
+            item_id,
+            quanty
+        });
 
     }
 

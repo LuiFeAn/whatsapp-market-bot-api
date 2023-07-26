@@ -47,6 +47,15 @@ class CartItemsRepository {
 
     }
 
+    updateItem({ cart_id,item_id, quanty }){
+
+        query("ECONOBOT",{
+            query:"UPDATE carrinho_items SET quantidade = ? WHERE id = ? AND carrinho_id = ?",
+            values:[quanty,item_id,cart_id]
+        }); 
+
+    }
+
 }
 
 module.exports = new CartItemsRepository();

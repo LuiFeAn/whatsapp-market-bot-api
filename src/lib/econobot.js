@@ -58,8 +58,8 @@ class Econobot {
             initialMenu:'*Escolha a opção desejada*\n1 - Fazer pedido',
             menuCheckout:"*O que deseja fazer ? digite a opção desejada.*\n\n1 - Pesquisar novo(s) produto(s)\n2 - Deletar Produto\n3 - Alterar quantidade de produto\n4 - Limpar carrinho\n5 - Finalizar pedido",
             paymentMenu:"",
-            globalConfigs:"\n\n------------------------------\n\n*Configurações:*\n/C - Carrinho",
-            quantyDefaultMessage:"Digite o nome do próximo produto desejado.\n\n/C - Carrinho"
+            globalConfigs:"/C - Carrinho",
+            styleList:'\n\n------------------------------\n\nConfigurações:\n',
 
         }
 
@@ -115,21 +115,12 @@ class Econobot {
 
             userLastMessageService.setLastMessage(message.from,lowerMessage);
 
-            const botBusy = botBusyRepository.findOne(message.from);;
+            const botBusy = botBusyRepository.findOne(message.from);
 
-            if( !botBusy ){
+            if( !botBusy ) botBusyRepository.add(message.from);
 
-                botBusyRepository.add(message.from);
+            if( botBusy?.isBusy ) return
 
-            }
-
-            if( botBusy && botBusy.isBusy ){
-
-                return
-
-            }
-
-        
             if( !user ){
 
                 const userInMemory = userFormInMemoryRepository.findOne(message.from);
@@ -251,6 +242,8 @@ class Econobot {
 
             const userState = userStateInMemoryRepository.findState(user.id);
 
+            const cart = await cartService.getCart(user.id);
+
             if( !userState ){
 
                 userStateInMemoryRepository.addState(user.id);
@@ -259,7 +252,7 @@ class Econobot {
 
                 await this.say(user.id,this.defaultMessages.selectMenuOption);
 
-                await this.say(user.id,`${this.defaultMessages.initialMenu}${this.defaultMessages.globalConfigs}`);
+                await this.say(user.id,`${this.defaultMessages.initialMenu}${this.defaultMessages.styleList}${this.defaultMessages.globalConfigs}`);
 
                 return;
 
@@ -283,8 +276,6 @@ class Econobot {
 
                 await message.reply('Aguarde enquanto busco aqui seu carrinho... É rápidinho ! 😉');
 
-                const cart = await cartService.getCart(user.id);
-
                 let noHasItems = 'Você não possui nenhum item no carrinho no momento.'
 
                 if( !cart ){
@@ -294,26 +285,22 @@ class Econobot {
                     return
 
                 }
-                
-                const userShoppingCart = await cartItemsService.calcItems(cart.id);
 
-                if( userShoppingCart.length === 0 ){
+                const shoppingList = await cartItemsService.getStatus(cart.id);
+
+                if( !shoppingList ){
 
                     await this.say(user.id,noHasItems);
 
-                    return;
+                    return
 
                 }
+
+                userStateInMemoryRepository.updateState(user.id,"USER_SHOPPING_MANAGER_OPTIONS");
 
                 clearMemoryService.clearUserLastProductAndList(user.id);
 
                 userLastSelectedItemInMemoryRepository.removeSelectedItem(user.id);
-
-                userStateInMemoryRepository.updateState(user.id,"USER_SHOPPING_MANAGER_OPTIONS");
-
-                const {  productsWithCalcPerItem, totalShoppingCart } = userShoppingCart;
-
-                const shoppingList = cartItemsService.getStatus(productsWithCalcPerItem,totalShoppingCart);
 
                 await this.say(user.id,`Atualmente, você possui os seguintes produtos no seu carrinho:\n${shoppingList}`);
 
@@ -338,7 +325,7 @@ class Econobot {
 
                             userStateInMemoryRepository.updateState(user.id,"SEARCH_PRODUCT")
 
-                            await this.say(user.id,`Pesquise por algum produto.${this.defaultMessages.globalConfigs}`);
+                            await this.say(user.id,`Pesquise por algum produto.${this.defaultMessages.styleList}${this.defaultMessages.globalConfigs}`);
 
                         },
 
@@ -374,7 +361,7 @@ class Econobot {
 
                     products.push({Descricao:'',precoUnitario:'',Codigo_Barra:''});
 
-                    let productSearchList = 'Foram encontrados os seguintes items referentes a sua pesquisa.\n\n*Digite o número da opção correspondente ao produto*';
+                    let productSearchList = '*Digite o número da opção correspondente ao produto*\n';
 
                     products.forEach((product,id)=>{
 
@@ -388,7 +375,7 @@ class Econobot {
 
                         if( id === products.length - 1){
 
-                            productSearchList += `\n\n*N - Nenhuma das opções*\n\n*/C - Carrinho*`;
+                            productSearchList += `${this.defaultMessages.styleList}*/N - Nenhuma das opções*\n/*C - Carrinho*`;
 
                         }
 
@@ -408,7 +395,7 @@ class Econobot {
 
                 "CHOOSE_ITEM": async () => {
 
-                    if( lowerMessage === 'n' ){
+                    if( lowerMessage === '/n' ){
                         
                         itemsListInMemoryRepository.removeItemsList(user.id);
 
@@ -435,8 +422,6 @@ class Econobot {
                         return
 
                     }
-
-                    const cart = await cartService.getCart(user.id);
 
                     const userAlreadyHasProduct = await cartItemsService.findItem(cart.id,product.Descricao);
                     
@@ -465,13 +450,17 @@ class Econobot {
 
                 "SELECT_PRODUCT_QUANTY": async () => {
 
-                    const cart = await cartService.getCart(user.id);
-
                     const quanty = Number(message.body);
 
                     const product = userLastSelectedItemInMemoryRepository.getSelectedItem(user.id);
 
-                    if( !quanty || quanty == 0 ) return this.say(user.id,'Por favor, digite uma quantidade válida.');
+                    if( !quanty || quanty <= 0 ){
+
+                        await this.say(user.id,'Por favor, digite uma quantidade válida.');
+
+                        return
+
+                    }
 
                     const { selected_item } = product;
 
@@ -488,7 +477,7 @@ class Econobot {
 
                     await this.say(user.id,`${message.body}X quantidade(s) de "${selected_item.Descricao}" adicionado(s) ao carrinho.`);
 
-                    await this.say(user.id,this.defaultMessages.quantyDefaultMessage);
+                    await this.say(user.id,`Digite o nome do próximo produto desejado.${this.defaultMessages.styleList}${this.defaultMessages.globalConfigs}`);
 
 
                 },
@@ -510,31 +499,26 @@ class Econobot {
 
                         "2": async () => {
 
-                            const cart = cartService.getCart(user.id);
-
-                            const cartItems = cartItemsService.findItems(cart.id);
-
-                            const {  productsWithCalcPerItem, totalShoppingCart } = cartItems;
-
-                            const shoppingList = cartItemsService.getStatus(productsWithCalcPerItem,totalShoppingCart);
-
                             userStateInMemoryRepository.updateState(user.id,"REMOVE_ITEM_FROM_CART");
 
-                            await this.say(user.id,`Por gentileza, digite o número do item que você gostaria de remover do carrinho !\n${shoppingList}`);
+                            const shoppingList = await cartItemsService.getStatus(cart.id);
 
-                            await this.say(shoppingList);
+                            await this.say(user.id,`Por gentileza, digite o número do item que você gostaria de remover do carrinho\n${shoppingList}`);
+
 
                         },
 
                         "3": async () => {
 
-                            await this.say(user.id,'Por gentileza, digite o ID do produto que você gostaria de alterar a quantidade');
+                            userStateInMemoryRepository.updateState(user.id,"UPDATE_ITEM_FROM_CART");
+
+                            const shoppingList = await cartItemsService.getStatus(cart.id);
+
+                            await this.say(user.id,`Por gentileza, digite o ID do produto que você gostaria de alterar a quantidade\n${shoppingList}`);
 
                         },
 
                         "4": async () => {
-                            
-                            const cart = await cartService.getCart(user.id);
 
                             await cartItemsService.removeAllItems(cart.id);
 
@@ -568,11 +552,63 @@ class Econobot {
 
                 },
 
-                "REMOVE_ITEM_FROM_CART": async () => {
+                "UPDATE_ITEM_FROM_CART": async () => {
 
                     const index = validIndex(lowerMessage);
 
-                    const cart = await cartService.getCart(user.id);
+                    const cartItems = await cartItemsService.findItems(cart.id);
+
+                    if( !cartItems[index] ){
+
+                        await message.reply('Este item não se encontra no seu carrinho');
+
+                        return
+
+                    }
+
+                    userStateInMemoryRepository.updateState(user.id,"CHOOSE_NEW_ITEM_QUANTY")
+                    
+                    userLastSelectedItemInMemoryRepository.addSelectedItem({
+                        id: user.id,
+                        selected_item: cartItems[index]
+                    })
+
+                    await this.say(user.id,`Digite a nova quantidade de "${cartItems[index].nome_produto}"`);
+
+                },
+
+                "CHOOSE_NEW_ITEM_QUANTY": async () => {
+
+                    const { selected_item } = userLastSelectedItemInMemoryRepository.getSelectedItem(user.id);
+
+                    const quanty = Number(message.body);
+
+                    if( !quanty || quanty <= 0 ){
+
+                        await this.say(user.id,'Por favor, digite uma quantidade válida.');
+
+                        return
+
+                    }
+
+                    await cartItemsService.updateItem({
+                        cart_id: cart.id,
+                        item_id: selected_item.id,
+                        quanty
+                    });
+
+                    userStateInMemoryRepository.updateState(user.id,"UPDATE_ITEM_FROM_CART");
+
+                    userLastSelectedItemInMemoryRepository.removeSelectedItem(user.id);
+
+                    this.say(user.id,`A quantidade de "${selected_item.nome_produto}" foi atualizada para ${quanty}\n*Se desejar atualizar mais algum produto digite seu ID, do contrário, digite */c* para voltar ao novamente ao menu checkout.*`);
+
+
+                },
+
+                "REMOVE_ITEM_FROM_CART": async () => {
+
+                    const index = validIndex(lowerMessage);
 
                     const cartItems = await cartItemsService.findItems(cart.id);
 
