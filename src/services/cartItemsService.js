@@ -1,4 +1,5 @@
 const cartItemsRepository = require("../repositories/cartItemsRepository");
+const toBRL = require("../utils/toBRL");
 const BotDefaultErrors = require("../errors/defaultError");
 
 class CartItemsService {
@@ -54,6 +55,34 @@ class CartItemsService {
         }
 
         return cartItems
+
+    }
+
+    getStatus(cartItems,total){
+
+        let shoppingList = ''
+
+        cartItems.push({nome_produto:'',quantidade:''});
+
+        cartItems.forEach((product,id) => {
+
+            const index = id += 1;
+
+            if( product.nome_produto ){
+
+                shoppingList += `\n*Item: ${index} - ${product.nome_produto} - ${product.quantidade} UND X ${toBRL(product.valor_produto)} - ${toBRL(product.total)}* `
+
+            }
+
+            if( id == productsWithCalcPerItem.length - 1){
+                
+                shoppingList += `\n\n*Valor total ${toBRL(total)}*`
+
+            }
+
+         });
+
+         return shoppingList;
 
     }
 

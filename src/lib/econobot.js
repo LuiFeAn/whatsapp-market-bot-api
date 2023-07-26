@@ -308,33 +308,13 @@ class Econobot {
 
                 userLastSelectedItemInMemoryRepository.removeSelectedItem(user.id);
 
-                const {  productsWithCalcPerItem, totalShoppingCart } = userShoppingCart;
-
                 userStateInMemoryRepository.updateState(user.id,"USER_SHOPPING_MANAGER_OPTIONS");
 
-                let shoppingList = 'Atualmente, você possui os seguintes produtos no seu carrinho:';
+                const {  productsWithCalcPerItem, totalShoppingCart } = userShoppingCart;
 
-                productsWithCalcPerItem.push({nome_produto:'',quantidade:''});
+                const shoppingList = cartItemsService.getStatus(productsWithCalcPerItem,totalShoppingCart);
 
-                productsWithCalcPerItem.forEach((product,id) => {
-
-                    const index = id += 1;
-
-                    if( product.nome_produto ){
-
-                        shoppingList += `\n*Item: ${index} - ${product.nome_produto} - ${product.quantidade} UND X ${toBRL(product.valor_produto)} - ${toBRL(product.total)}* `
-
-                    }
-
-                    if( id == productsWithCalcPerItem.length - 1){
-                        
-                        shoppingList += `\n\n*Valor total ${toBRL(totalShoppingCart)}*`
-
-                    }
-
-                });
-
-                await this.say(user.id,shoppingList);
+                await this.say(user.id,`Atualmente, você possui os seguintes produtos no seu carrinho:\n${shoppingList}`);
 
                 await this.say(user.id,this.defaultMessages.menuCheckout);
 
@@ -529,9 +509,19 @@ class Econobot {
 
                         "2": async () => {
 
+                            const cart = cartService.getCart(user.id);
+
+                            const cartItems = cartItemsService.findItems(cart.id);
+
+                            const {  productsWithCalcPerItem, totalShoppingCart } = cartItems;
+
+                            const shoppingList = cartItemsService.getStatus(productsWithCalcPerItem,totalShoppingCart);
+
                             userStateInMemoryRepository.updateState(user.id,"REMOVE_ITEM_FROM_CART");
 
-                            await this.say(user.id,'Por gentileza, digite o número do item que você gostaria de remover do carrinho !');
+                            await this.say(user.id,`Por gentileza, digite o número do item que você gostaria de remover do carrinho !\n${shoppingList}`);
+
+                            await this.say(shoppingList);
 
                         },
 
