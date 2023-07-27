@@ -64,5 +64,13 @@ CREATE TABLE carrinho_items(
 
 );
 
+CREATE TABLE pedidos(
+
+     id INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+     carrinho_id INT(10) NOT NULL,
+     FOREIGN KEY (carrinho_id) REFERENCES carrinhos(id) ON UPDATE CASCADE ON DELETE CASCADE
+
+);
+
 
 

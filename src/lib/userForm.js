@@ -42,4 +42,18 @@ class UserInfosForm {
 
 }
 
+class UserInfosFormWithDeliveryMethod extends UserInfosForm {
+
+    delivery_method
+    
+    constructor(delivery_method){
+        super()
+    }
+
+    addDelivery(delivery){
+
+    }
+
+}
+
 module.exports = UserInfosForm;
