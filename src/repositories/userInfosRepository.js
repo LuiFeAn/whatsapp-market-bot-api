@@ -4,9 +4,9 @@ const query = require("../database/mysql-async");
 class UserInfosRepository {
 
 
-    async insertInfos({ usuario_id, numero_telefone, endereco }){
+    insertInfos({ usuario_id, numero_telefone, endereco }){
 
-        query('ECONOBOT',{
+        return query('ECONOBOT',{
             query:'INSERT INTO usuario_informacoes VALUES(NULL,?,?,?)',
             values:[usuario_id,numero_telefone,endereco]
         })

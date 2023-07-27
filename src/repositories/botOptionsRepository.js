@@ -2,9 +2,9 @@ const query = require("../database/mysql-async");
 
 class BotOptionsRepository {
 
-    async enableProductDescription(){
+    enableProductDescription(){
 
-        query("ECONOBOT",{
+        return query("ECONOBOT",{
             query:"UPDATE econobot SET enviar_descricao_produto = ?",
             values:[1]
         })
@@ -13,7 +13,7 @@ class BotOptionsRepository {
 
     async disableProductDescription(){
 
-        query("ECONOBOT",{
+        return query("ECONOBOT",{
             query:"UPDATE econobot SET enviar_descricao_produto = ?",
             values:[0]
         })

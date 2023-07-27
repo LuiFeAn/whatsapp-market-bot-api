@@ -58,9 +58,9 @@ class Econobot {
         this.defaultMessages = {
             selectMenuOption:`*A cada etapa algumas opções serão apresentadas para você, e basta você responder com o número ou a letra da a opção desejada*`,
             initialMenu:'*Escolha a opção desejada*\n1 - Fazer pedido',
-            menuCheckout:"*O que deseja fazer ? digite a opção desejada.*\n\n1 - Pesquisar novo(s) produto(s)\n2 - Deletar Produto\n3 - Alterar quantidade de produto\n4 - Limpar carrinho\n5 - Finalizar pedido",
+            menuCheckout:"*O que deseja fazer ? digite a opção desejada.*\n\n1 - Pesquisar novo(s) produto(s)\n2 - Deletar Produto\n3 - Alterar quantidade de produto\n4 - Limpar carrinho\n5 - Finalizar pedido\n6 - Finalizar atendimento",
             paymentMenu:"",
-            globalConfigs:"/C - Carrinho",
+            globalConfigs:"C - Carrinho",
             styleList:'\n\n------------------------------\n\nConfigurações:\n',
 
         }
@@ -261,40 +261,15 @@ class Econobot {
 
             }
 
-            if(['/f','finalizar atendimento'].includes(lowerMessage)){
 
-                userStateInMemoryRepository.updateState(user.id,null);
-
-                clearMemoryService.clearUserLastProductAndList(user.id);
-                
-                await this.say(user.id,`Certo. Até breve, ${user.nome_completo} !`)
-        
-                return
-
-            
-            }
-
-            if(['/c','carrinho'].includes(lowerMessage)){
-
-                await message.reply('Aguarde enquanto busco aqui seu carrinho... É rápidinho ! 😉');
-
-                let noHasItems = 'Você não possui nenhum item no carrinho no momento.'
-
-                if( !cart ){
-
-                    await this.say(user.id,noHasItems);
-
-                    return
-
-                }
+            if(['c','carrinho'].includes(lowerMessage) 
+                && ['CHOOSE_MENU_OPTION','CHOOSE_ITEM','SELECT_PRODUCT_QUANTY','SEARCH_PRODUCT'].includes(userState.current_state)){
 
                 const shoppingList = await cartItemsService.getStatus(cart.id);
 
-                if( !shoppingList ){
+                if( shoppingList ){
 
-                    await this.say(user.id,noHasItems);
-
-                    return
+                    await message.reply('Aguarde enquanto busco aqui seu carrinho... É rápidinho ! 😉');
 
                 }
 
@@ -304,7 +279,11 @@ class Econobot {
 
                 userLastSelectedItemInMemoryRepository.removeSelectedItem(user.id);
 
-                await this.say(user.id,`Atualmente, você possui os seguintes produtos no seu carrinho:\n${shoppingList}`);
+                if( shoppingList ){
+
+                    await this.say(user.id,`Atualmente, você possui os seguintes produtos no seu carrinho:\n${shoppingList}`);
+
+                }
 
                 await this.say(user.id,this.defaultMessages.menuCheckout);
 
@@ -377,7 +356,7 @@ class Econobot {
 
                         if( id === products.length - 1){
 
-                            productSearchList += `${this.defaultMessages.styleList}*/N - Nenhuma das opções*\n/*C - Carrinho*`;
+                            productSearchList += `${this.defaultMessages.styleList}*N - Nenhuma das opções*\n*C - Carrinho*`;
 
                         }
 
@@ -397,7 +376,7 @@ class Econobot {
 
                 "CHOOSE_ITEM": async () => {
 
-                    if( lowerMessage === '/n' ){
+                    if( lowerMessage === 'n' ){
                         
                         itemsListInMemoryRepository.removeItemsList(user.id);
 
@@ -486,7 +465,23 @@ class Econobot {
 
                 'USER_SHOPPING_MANAGER_OPTIONS': async () => {
 
-                    const valid = [ "1","2","3","4","5"];
+                    const valid = [ "1","2","3","4","5","6"];
+
+                    const shoppingList = await cartItemsService.getStatus(cart.id);
+
+                    const verifyCart = async () => {
+
+                        if( !shoppingList ){
+
+                            await this.say(user.id,"Carrinho vazio 🛒");
+
+                            return
+
+                        }
+
+                        return true;
+
+                    }
 
                     const handleShoppingOptions = {
 
@@ -501,9 +496,11 @@ class Econobot {
 
                         "2": async () => {
 
-                            userStateInMemoryRepository.updateState(user.id,"REMOVE_ITEM_FROM_CART");
+                            const verification = await verifyCart();
 
-                            const shoppingList = await cartItemsService.getStatus(cart.id);
+                            if( !verification ) return;
+
+                            userStateInMemoryRepository.updateState(user.id,"REMOVE_ITEM_FROM_CART");
 
                             await this.say(user.id,`Por gentileza, digite o número do item que você gostaria de remover do carrinho\n${shoppingList}`);
 
@@ -512,9 +509,11 @@ class Econobot {
 
                         "3": async () => {
 
-                            userStateInMemoryRepository.updateState(user.id,"UPDATE_ITEM_FROM_CART");
+                            const verification = await verifyCart();
 
-                            const shoppingList = await cartItemsService.getStatus(cart.id);
+                            if( !verification ) return;
+
+                            userStateInMemoryRepository.updateState(user.id,"UPDATE_ITEM_FROM_CART");
 
                             await this.say(user.id,`Por gentileza, digite o ID do produto que você gostaria de alterar a quantidade\n${shoppingList}`);
 
@@ -522,25 +521,49 @@ class Econobot {
 
                         "4": async () => {
 
+                            const verification = await verifyCart();
+
+                            if( !verification ) return;
+
                             await cartItemsService.removeAllItems(cart.id);
 
-                            userStateInMemoryRepository.updateState(user.id,"AFTER_CLEAR_CARR");
-
-                            await this.say(user.id,"Seu carrinho foi esvaziado. O que deseja fazer agora?\n1 - Fazer novo pedido\nf - Finalizar o atendimento");
+                            await this.say(user.id,`Seu carrinho foi esvaziado. O que deseja fazer agora?\n\b${this.defaultMessages.menuCheckout}`);
 
                         },
 
                         "5": async () => {
 
+<<<<<<< HEAD
                             userStateInMemoryRepository.updateState(user.id,"DELIVERY_METHOD");
+=======
+                            const verification = await verifyCart();
+
+                            if( !verification ) return;
+
+                            userStateInMemoryRepository.updateState(user.id,"CONFIRM_ADRESS");
+>>>>>>> e5c65187f24bfc6afc069ea6d30c9417bc5d6072
 
                             await this.say('Escolha o método de entrega\n1 - Entregar em Casa\n2 - Vou retirar na loja');
+
+                        }, 
+
+                        "6": async () => {
+
+                            userStateInMemoryRepository.updateState(user.id,null);
+
+                            clearMemoryService.clearUserLastProductAndList(user.id);
+                            
+                            await this.say(user.id,`Certo. Até breve, ${user.nome_completo} !`)
+
+                        },
+
+                        "7": async () => {
 
                         },
 
                         "default": async () =>{
 
-                            await this.say(user.id,"Opção inválida !");
+                            await this.say(user.id,`Ops ! opção inválida.\n${this.defaultMessages.menuCheckout}`);
 
                         }
 
@@ -648,11 +671,14 @@ class Econobot {
                         quanty
                     });
 
-                    userStateInMemoryRepository.updateState(user.id,"UPDATE_ITEM_FROM_CART");
+                    const shoppingList = await cartItemsService.getStatus(cart.id);
+
+                    userStateInMemoryRepository.updateState(user.id,"USER_SHOPPING_MANAGER_OPTIONS");
 
                     userLastSelectedItemInMemoryRepository.removeSelectedItem(user.id);
 
-                    this.say(user.id,`A quantidade de "${selected_item.nome_produto}" foi atualizada para ${quanty}\n*Se desejar atualizar mais algum produto digite seu ID, do contrário, digite */c* para voltar ao novamente ao menu checkout.*`);
+                    this.say(user.id,`*A quantidade de "${selected_item.nome_produto}" foi atualizada para ${quanty}.*\n\n${shoppingList}\n\n${this.defaultMessages.menuCheckout}`);
+
 
 
                 },
@@ -673,23 +699,14 @@ class Econobot {
 
                     await cartItemsService.removeItem(cart.id,cartItems[index].id);
 
-                    await this.say(user.id,`O produto "${cartItems[index].nome_produto}" foi removido do seu carrinho.\n*Remova outro produto, ou se preferir, digite c para acessar novamente o menu de checkout*`);
+                    const shoppingList = await cartItemsService.getStatus(cart.id);
+
+                    userStateInMemoryRepository.updateState(user.id,"USER_SHOPPING_MANAGER_OPTIONS");
+
+                    this.say(user.id,`*O produto "${cartItems[index].nome_produto}" foi removido do carrinho.*\n\n${shoppingList ?? 'Carrinho Vazio 🛒 '}\n\n${this.defaultMessages.menuCheckout}`);
 
                 },
 
-                "AFTER_CLEAR_CAR": async () => {
-
-                    if( !["1"].includes(lowerMessage) ){
-
-                        await this.say(user.id,"Opção inválida");
-
-                        return
-
-                    }
-
-                    userStateInMemoryRepository.updateState(user.id,"SEARCH_PRODUCT");
-
-                },
 
                 "PAYMENT_OPTIONS": async () => {
 

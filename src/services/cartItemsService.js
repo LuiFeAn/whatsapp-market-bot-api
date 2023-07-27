@@ -1,12 +1,11 @@
 const cartItemsRepository = require("../repositories/cartItemsRepository");
 const { toBRL } = require("../utils/toBRL");
-const BotDefaultErrors = require("../errors/defaultError");
 
 class CartItemsService {
 
     async addItem({cart_id,product_name,product_value,quanty}){
 
-        cartItemsRepository.add({
+        await cartItemsRepository.add({
             cart_id,
             product_name,
             product_value,
@@ -98,19 +97,19 @@ class CartItemsService {
 
     async removeItem(cart_id,id){
         
-        cartItemsRepository.remove(cart_id,id);
+        await cartItemsRepository.remove(cart_id,id);
         
     }
 
     async removeAllItems(cart_id){
 
-        cartItemsRepository.removeAll(cart_id);
+        await cartItemsRepository.removeAll(cart_id);
 
     }
 
     async updateItem({ cart_id, item_id, quanty }){
 
-        cartItemsRepository.updateItem({
+        await cartItemsRepository.updateItem({
             cart_id,
             item_id,
             quanty
