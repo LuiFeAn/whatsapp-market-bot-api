@@ -29,6 +29,7 @@ const userFormInMemoryRepository = require('../repositories/inMemory/userFormInM
 const itemsListInMemoryRepository = require("../repositories/inMemory/itemsListInMemoryRepository");
 const userLastSelectedItemInMemoryRepository = require("../repositories/inMemory/userLastSelectedItemInMemoryRepository");
 const userStateInMemoryRepository = require("../repositories/inMemory/userStateInMemoryRepository");
+const userDataInMemoryRepository = require("../repositories/inMemory/userDataInMemoryRepository");
 const userLastMessageService = require('../services/userLastMessageInMemoryService');
 
 const clearMemoryService = require("../services/clearMemoryService");
@@ -36,6 +37,7 @@ const cartService = require("../services/userCartService");
 const cartItemsService = require("../services/cartItemsService");
 
 const validIndex = require("../utils/validIndex");
+const validOptions = require("../utils/validOptions");
 
 class Econobot {
 
@@ -530,11 +532,9 @@ class Econobot {
 
                         "5": async () => {
 
-                            userStateInMemoryRepository.updateState(user.id,"CONFIRM_ADRESS");
+                            userStateInMemoryRepository.updateState(user.id,"DELIVERY_METHOD");
 
-                            await this.say(user.id,`Antes de continuarmos, por favor, confirme se seu endereço está correto:\n\n*${user.endereco}*`);
-
-                            await this.say(user.id,'Você confirma este endereço ?\n S - Sim\nN - Não');
+                            await this.say('Escolha o método de entrega\n1 - Entregar em Casa\n2 - Vou retirar na loja');
 
                         },
 
@@ -549,6 +549,57 @@ class Econobot {
                     const option = valid.find( option => option.includes(lowerMessage) );
 
                     handleShoppingOptions[ option ?? 'default']();
+
+                },
+
+                "DELIVERY_METHOD": async () => {
+
+                    const isValid = validOptions(['1','2'],lowerMessage);
+
+                    if( !isValid ){
+
+                        await this.say(user.id,"Opção inválida");
+
+                        return
+
+                    }
+
+                    //Armazena a opção selecionada no repositoróio de "fórmulário" do usuário
+
+                    if( lowerMessage === '1' ){
+
+                        userDataInMemoryRepository.addUserData("ENTREGAR EM CASA");
+
+                        userStateInMemoryRepository.updateState(user.id,"CONFIRM_ADRESS")
+
+                        await this.say(user.id,`${user.nome_completo}, você confirma seu endereço para entrega ?\n"${user.endereco}"`);
+
+                        return
+
+                    }
+
+                    userStateInMemoryRepository.updateState(user.id,"CONFIRM_PAYMENT")
+
+                    userDataInMemoryRepository.addUserData(user.id,"BUSCAR NA LOJA");
+
+                    await this.say(user.id,`O nosso endereço é:\nRua Sebastião Lopes de Menzes 90, Biarro Nova Brasília, Campina Grande.\nS - Sim\nN - Não${this.defaultMessages.styleList}${this.defaultMessages.globalConfigs
+                    }`);
+
+                    await this.say(user.id,`${user.nome_completo}Você confirma vir buscar suas compras em nosso endereço?`);
+
+                },
+
+                "CONFIRM_DELIVERY_METHOD": async () => {
+
+                    const isValid = validOptions(['s','n']);
+
+                    if( !isValid ){
+                        
+                        await this.say(user.id,`Por favor, digite uma opção válida`);
+
+                        return
+
+                    }
 
                 },
 
