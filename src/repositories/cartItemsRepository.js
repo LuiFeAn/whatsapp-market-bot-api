@@ -2,25 +2,25 @@ const query = require("../database/mysql-async");
 
 class CartItemsRepository {
 
-    async add({cart_id,product_name,product_value,quanty}){
+    add({cart_id,product_name,product_value,quanty}){
 
-        query("ECONOBOT",{
+        return query("ECONOBOT",{
             query:"INSERT INTO carrinho_items VALUES (NULL,?,?,?,?)",
             values:[cart_id,product_name,product_value,quanty]
         })
 
     }
 
-    async remove(cart_id,id){
+    remove(cart_id,id){
 
-        query("ECONOBOT",{
+        return query("ECONOBOT",{
             query:"DELETE FROM carrinho_items WHERE carrinho_id = ? AND id = ?",
             values:[cart_id,id]
         });
 
     }
 
-    async find(cart_id,product_name){
+    find(cart_id,product_name){
 
         return query("ECONOBOT",{
             query:"SELECT * FROM carrinho_items WHERE carrinho_id = ? AND nome_produto = ?",
@@ -29,7 +29,7 @@ class CartItemsRepository {
 
     }
 
-    async findAll(cart_id){
+    findAll(cart_id){
 
         return query("ECONOBOT",{
             query:"SELECT * FROM carrinho_items WHERE carrinho_id = ?",
@@ -40,7 +40,7 @@ class CartItemsRepository {
 
     removeAll(cart_id){
 
-        query("ECONOBOT",{
+        return query("ECONOBOT",{
             query:"DELETE FROM carrinho_items WHERE carrinho_id = ?",
             values:[cart_id]
         });        
@@ -49,7 +49,7 @@ class CartItemsRepository {
 
     updateItem({ cart_id,item_id, quanty }){
 
-        query("ECONOBOT",{
+        return query("ECONOBOT",{
             query:"UPDATE carrinho_items SET quantidade = ? WHERE id = ? AND carrinho_id = ?",
             values:[quanty,item_id,cart_id]
         }); 

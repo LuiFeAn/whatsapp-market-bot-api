@@ -14,7 +14,7 @@ class ProductRepository {
 
     }
 
-    update(id){
+    async update(id){
         
     }
 

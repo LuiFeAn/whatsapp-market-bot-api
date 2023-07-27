@@ -31,17 +31,18 @@ class UserRepository {
 
     }
 
-    async insertUser({ id, nome_completo, current_step, nivel_acesso_id }){
+    insertUser({ id, nome_completo, current_step, nivel_acesso_id }){
 
-        query('ECONOBOT',{
+        return query('ECONOBOT',{
             query:'INSERT INTO usuarios VALUES(?,?,?,?)',
             values:[id,nome_completo.toUpperCase(),current_step,nivel_acesso_id]
         });
 
     }
 
-    async setCurrentStep(id,step){
-        query('ECONOBOT',
+    setCurrentStep(id,step){
+        
+        return query('ECONOBOT',
         {
             query:'UPDATE usuarios SET current_step = ? WHERE id = ?',
             values:[step,id]

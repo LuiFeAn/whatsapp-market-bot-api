@@ -2,17 +2,16 @@ const query = require("../database/mysql-async");
 
 class CartRepository {
 
-    async create(user_id){
+    create(user_id){
 
-
-        query("ECONOBOT",{
+        return query("ECONOBOT",{
             query:'INSERT INTO carrinhos VALUES (NULL,?,?)',
             values:[user_id,'ABERTO']
         });
 
     }
 
-    async get(user_id){
+    get(user_id){
 
         return query('ECONOBOT',{
             query:'SELECT * FROM carrinhos WHERE usuario_id = ?',
@@ -23,7 +22,7 @@ class CartRepository {
 
     async remove(user_id){
 
-        query("ECONOBOT",{
+        return query("ECONOBOT",{
             query:'REMOVE FROM carrinhos WHERE usuario_id = ?',
             values:[user_id]
         });

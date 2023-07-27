@@ -12,6 +12,10 @@ class CartService {
 
     }
 
+    deleteCart(user_id){
+        
+    }
+
     async getCart(user_id){
 
         const [ cart ] = await cartRepository.get(user_id);
