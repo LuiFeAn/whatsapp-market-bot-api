@@ -14,9 +14,9 @@ class UserDataInMemoryRepository {
 
     }
 
-    addUserData(id,infos){
+    setUserData(id,data){
 
-        this.userData.set(id,infos);
+        this.userData.set(id,data);
 
     }
 
@@ -25,6 +25,7 @@ class UserDataInMemoryRepository {
         this.userData.delete(id);
         
     }
+
 
 }
 

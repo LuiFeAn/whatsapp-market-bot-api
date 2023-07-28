@@ -38,6 +38,7 @@ const cartItemsService = require("../services/cartItemsService");
 
 const validIndex = require("../utils/validIndex");
 const validOptions = require("../utils/validOptions");
+const currentDate = require("../utils/currentDate");
 
 class Econobot {
 
@@ -61,7 +62,7 @@ class Econobot {
             menuCheckout:"*O que deseja fazer ? digite a opção desejada.*\n\n1 - Pesquisar novo(s) produto(s)\n2 - Deletar Produto\n3 - Alterar quantidade de produto\n4 - Limpar carrinho\n5 - Finalizar pedido\n6 - Finalizar atendimento",
             paymentMenu:"",
             globalConfigs:"C - Carrinho",
-            styleList:'\n\n------------------------------\n\nConfigurações:\n',
+            styleList:'\n\n------------------------------\n\n',
 
         }
 
@@ -533,17 +534,13 @@ class Econobot {
 
                         "5": async () => {
 
-<<<<<<< HEAD
-                            userStateInMemoryRepository.updateState(user.id,"DELIVERY_METHOD");
-=======
                             const verification = await verifyCart();
 
                             if( !verification ) return;
 
-                            userStateInMemoryRepository.updateState(user.id,"CONFIRM_ADRESS");
->>>>>>> e5c65187f24bfc6afc069ea6d30c9417bc5d6072
+                            userStateInMemoryRepository.updateState(user.id,"DELIVERY_METHOD");
 
-                            await this.say('Escolha o método de entrega\n1 - Entregar em Casa\n2 - Vou retirar na loja');
+                            await this.say(user.id,'Escolha o método de entrega\n1 - Entregar em Casa\n2 - Vou retirar na loja');
 
                         }, 
 
@@ -581,7 +578,7 @@ class Econobot {
 
                     if( !isValid ){
 
-                        await this.say(user.id,"Opção inválida");
+                        await this.say(user.id,`Opção inválida.\n\nEscolha o método de entrega\n1 - Entregar em Casa\n2 - Vou retirar na loja`);
 
                         return
 
@@ -591,38 +588,62 @@ class Econobot {
 
                     if( lowerMessage === '1' ){
 
-                        userDataInMemoryRepository.addUserData("ENTREGAR EM CASA");
+                        userDataInMemoryRepository.setUserData(user.id,{
+                            delivery_method:"ENTREGAR EM CASA"
+                        });
 
                         userStateInMemoryRepository.updateState(user.id,"CONFIRM_ADRESS")
 
-                        await this.say(user.id,`${user.nome_completo}, você confirma seu endereço para entrega ?\n"${user.endereco}"`);
+                        await this.say(user.id,`${user.nome_completo}, você confirma seu endereço para entrega ?\n\nSeu endereço:"${user.endereco}"\n\nS - Sim, confirmo\nN - Não, está incorreto`);
 
                         return
 
                     }
 
-                    userStateInMemoryRepository.updateState(user.id,"CONFIRM_PAYMENT")
+                    userStateInMemoryRepository.updateState(user.id,"CONFIRM_DELIVERY_METHOD")
 
-                    userDataInMemoryRepository.addUserData(user.id,"BUSCAR NA LOJA");
+                    userDataInMemoryRepository.setUserData(user.id,{
+                        delivery_method:"BUSCAR NA LOJA"
+                    });
 
-                    await this.say(user.id,`O nosso endereço é:\nRua Sebastião Lopes de Menzes 90, Biarro Nova Brasília, Campina Grande.\nS - Sim\nN - Não${this.defaultMessages.styleList}${this.defaultMessages.globalConfigs
+                    await this.say(user.id,`O nosso endereço é:\nRua Sebastião Lopes de Menzes 90, Biarro Nova Brasília, Campina Grande.`);
+
+                    await this.say(user.id,`${user.nome_completo}, você confirma vir buscar suas compras em nosso endereço?\n\nS - Sim, desejo buscar\nN - Não, prefiro escolher outro método${this.defaultMessages.styleList}${this.defaultMessages.globalConfigs
                     }`);
-
-                    await this.say(user.id,`${user.nome_completo}Você confirma vir buscar suas compras em nosso endereço?`);
 
                 },
 
                 "CONFIRM_DELIVERY_METHOD": async () => {
 
-                    const isValid = validOptions(['s','n']);
+                    const isValid = validOptions(['s','n'],lowerMessage);
 
                     if( !isValid ){
                         
-                        await this.say(user.id,`Por favor, digite uma opção válida`);
+                        await this.say(user.id,`S - Sim, desejo buscar\nN - Não, prefiro escolher outro método${this.defaultMessages.styleList}${this.defaultMessages.globalConfigs}`);
 
                         return
 
                     }
+
+
+                    if( lowerMessage === 'n' ){
+
+                        userDataInMemoryRepository.removeUserData(user.id);
+
+                        userStateInMemoryRepository.updateState(user.id,"DELIVERY_METHOD");
+
+                        await this.say(user.id,`Escolha o método de entrega\n1 - Entregar em Casa\n2 - Vou retirar na loja`);
+                       
+                        return
+
+                    }
+
+                    const { totalShoppingCart } = await cartItemsService.calcItems(cart.id);
+
+                    userStateInMemoryRepository.updateState(user.id,"PAYMENT_OPTIONS");
+
+                    await this.say(user.id,`Escolha a forma de pagamento desejada:\nTotal do pedido: ${toBRL(totalShoppingCart)}\n\n1 - Dinheiro\n2 - Cartão\n3- PIX`);
+
 
                 },
 
@@ -712,22 +733,33 @@ class Econobot {
 
                     const validPayment = ['1','2','3'];
 
+                    const userData = userDataInMemoryRepository.getUserData(user.id);
+
                     const handlePayment = {
 
                         '1': async () => {
+                           
+                            userData.payment_method = 'DINHEIRO';
 
+                            userStateInMemoryRepository.updateState(user.id,"EXCHANGED_OPTIONS");
+
+                            const  { totalShoppingCart } = await cartItemsService.calcItems(cart.id);
+
+                            await this.say(user.id,`Total do pedido: ${toBRL(totalShoppingCart)}\nVocê precisará de troco ?\nS - Sim, irei precisar de troco\nN - Não preciso de troco\nV - Voltar\nC - Carrinho`);
 
                         },
 
                         '2': async () => {
-
-                        },
-
-                        '4': async () => {
                             
+                            userData.payment_method = 'CARTÃO';
+
+                            userDataInMemoryRepository.setUserData(user.id,userData);
+
                         },
 
                         "3": async () => {
+
+                            userData.payment_method = 'PIX';
 
                             const userShoppingCart = await shoppingCartService.calcUserTotalShoppingCart(user.id);
 
@@ -758,21 +790,9 @@ class Econobot {
 
                         },
 
-                        "CONFIRM_ADRESS": async () => {
-
-                            if( lowerMessage.includes('n') ){
-                                
-                                await this.say(user.id,'Perfeito ! obrigado por confirmar seu endereço 😍');
-
-                                return
-
-                            }
-
-                        },
-
                         'default': async () => {
 
-                            message.reply('Opção de pagamento inválida !');
+                            message.reply(`Opção de pagamento inválida !\n\nEscolha a forma de pagamento desejada:\n1 - Dinheiro\n2 - Cartão\n3- PIX`);
 
                         }
 
@@ -783,7 +803,92 @@ class Econobot {
 
                     handlePayment[ payment ?? 'default' ]();
 
-                }
+                },
+
+                "EXCHANGED_OPTIONS": async () => {
+
+                    const isValid = validOptions(['s','n','v'],lowerMessage);
+
+                    if( !isValid ){
+
+                        await this.say(user.id,"Você precisará de troco ?\nS - Sim, irei precisar de troco\nN - Não preciso de troco\nV - Voltar\nC - Carrinho");
+
+                        return;
+
+                    }
+
+
+                    if( lowerMessage === 'n' ){
+
+                        userStateInMemoryRepository.updateState(user.id,"DEMAND_OBSERVATION");
+
+                        await this.say(user.id,'Digite alguma observação para seu pedido\nExemplo: "Coloque a banana mais madura..."');
+
+                        return
+
+                    }
+
+                    if( lowerMessage === 'v' ){
+
+                        userStateInMemoryRepository.updateState(user.id,"PAYMENT_OPTIONS");
+
+                        await this.say(user.id,"Escolha a forma de pagamento desejada:\n1 - Dinheiro\n2 - Cartão\n3- PIX");
+
+                        return
+
+                    }
+
+                    userStateInMemoryRepository.updateState(user.id,"DEMAND_EXCHANGE");
+
+                    await this.say(user.id,"Você precisará de troco para quanto?");
+
+
+                },
+
+                "DEMAND_EXCHANGE": async () => {
+
+                    const exchange = Number(lowerMessage);
+
+                    if( !exchange || exchange <= 0 ){
+
+                        await this.say(user.id,'Por gentileza, digite uma quantidade válida de troco.');
+
+                        return
+
+                    }
+
+                    userStateInMemoryRepository.updateState(user.id,"DEMAND_CONFIRMATION");
+
+                    const userData = userDataInMemoryRepository.getUserData(user.id);
+
+                    userData.exchange_value = exchange;
+
+                    await this.say(user.id,`Perfeito. Troco para ${exchange}`);
+
+                    const shoppingList = await cartItemsService.getStatus(cart.id);
+
+                    const { totalShoppingCart } = await cartItemsService.calcItems(cart.id);
+
+                    await this.say(user.id,`*Confirme se seu pedido está correto e escolha finalizar 👇*\n\n*Pedido: xxxx*\n*Horário: ${currentDate()}*\n*Cliente: ${user.nome_completo}*\n*Celular: ${user.numero_telefone}*\n*Entrega: ${userData.delivery_method}*\n*Endereço: ${user.endereco}*\n*Complemento: ${userData.complement ?? "N/A"}*\n${this.defaultMessages.styleList}${shoppingList}${this.defaultMessages.styleList}*Taxa de entrega: ${userData.delivery_method === 'BUSCAR NA LOJA' ? 'N/A*' : 'R$ 5,00 R$*'}\n*Total: ${userData.delivery_method === 'BUSCAR NA LOJA' ? toBRL(totalShoppingCart) : toBRL(totalShoppingCart + 5)}}*\n*Pagamento: ${userData.payment_method}*\n*Troco para: ${ userData?.exchange_value ? toBRL(userData.exchange_value) : 'N/A' }*\n*Obrigado!*${this.defaultMessages.styleList}\n\nF - Finalizar\nC - Cancelar pedido`);
+
+                },
+
+                "DEMAND_CONFIRMATION": async () => {
+
+
+                },
+
+                "CONFIRM_ADRESS": async () => {
+
+                    if( lowerMessage.includes('n') ){
+                        
+                        await this.say(user.id,'Perfeito ! obrigado por confirmar seu endereço 😍');
+
+                        return
+
+                    }
+
+                },
 
             }
 
@@ -814,6 +919,7 @@ class Econobot {
         botBusyRepository.update(user,false);
 
     }
+    
 
 
 }
