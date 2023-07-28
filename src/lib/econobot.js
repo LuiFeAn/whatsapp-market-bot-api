@@ -119,8 +119,6 @@ class Econobot {
 
             userLastMessageService.setLastMessage(message.from,lowerMessage);
 
-            console.log(botBusyRepository.findBussy(user.id));
-
             if( botBusyRepository.findBussy(user.id) ) return
 
 
@@ -225,7 +223,7 @@ class Econobot {
                             numero_telefone
                         });
                         
-                        userStateInMemoryRepository.addState(message.from,"CHOOSE_MENU_OPTION");
+                        userStateInMemoryRepository.setState(message.from,"CHOOSE_MENU_OPTION");
         
                         await this.say(message.from,'Perfeito ! seu cadastro está completo 😎😆');
 
@@ -243,7 +241,9 @@ class Econobot {
         
             }
 
-            const userState = userStateInMemoryRepository.findState(user.id);
+            const userState = userStateInMemoryRepository.getState(user.id);
+
+            console.log(userState);
 
             const cart = await cartService.getCartFromUser(user.id);
 
@@ -251,7 +251,7 @@ class Econobot {
 
             if( !userState ){
 
-                userStateInMemoryRepository.addState(user.id);
+                userStateInMemoryRepository.setState(user.id,"CHOOSE_MENU_OPTION");
 
                 await this.say(user.id,`Olá, ${user.nome_completo} ! Que bom ver você de novo por aqui 😁`);
 
@@ -259,7 +259,7 @@ class Econobot {
 
                     const items = await cartItemsService.findItems(cart.id);
 
-                    userStateInMemoryRepository.updateState(user.id,"DEMAND_ALREADY_EXISTS_OPTIONS");
+                    userStateInMemoryRepository.setState(user.id,"DEMAND_ALREADY_EXISTS_OPTIONS");
                     
                     await this.say(user.id,`${user.nome_completo}, identiquei que você tem um carrinho com ${items.length} item(s), você deseja continuar com esse carrinho?\n\n1 - Sim, desejo\n2 - Não, desejo realizar um novo pedido`);
 
@@ -267,7 +267,7 @@ class Econobot {
 
                 }
 
-                userStateInMemoryRepository.updateState(user.id,"CHOOSE_MENU_OPTION")
+                userStateInMemoryRepository.setState(user.id,"CHOOSE_MENU_OPTION")
 
                 await this.say(user.id,"Como posso ajudar?");
 
@@ -287,7 +287,7 @@ class Econobot {
 
                 if( !cart ){
 
-                    userStateInMemoryRepository.updateState(user.id,"CHOOSE_MENU_OPTION");
+                    userStateInMemoryRepository.setState(user.id,"CHOOSE_MENU_OPTION");
 
                     await this.say(user.id,`Para acessar o menu do carrinho, primeiramente você tem que realizar um pedido !\n1 - Fazer pedido`);
 
@@ -295,7 +295,7 @@ class Econobot {
 
                 }
 
-                userStateInMemoryRepository.updateState(user.id,"USER_SHOPPING_MANAGER_OPTIONS");
+                userStateInMemoryRepository.setState(user.id,"USER_SHOPPING_MANAGER_OPTIONS");
 
                 clearMemoryService.clearUserLastProductAndList(user.id);
 
@@ -334,7 +334,7 @@ class Econobot {
 
                     }
 
-                    userStateInMemoryRepository.updateState(user.id,"CHOOSE_MENU_OPTION")
+                    userStateInMemoryRepository.setState(user.id,"CHOOSE_MENU_OPTION")
 
                     if( lowerMessage === '2' ){
 
@@ -361,7 +361,7 @@ class Econobot {
 
                             await cartService.createCart(user.id);
 
-                            userStateInMemoryRepository.updateState(user.id,"SEARCH_PRODUCT")
+                            userStateInMemoryRepository.setState(user.id,"SEARCH_PRODUCT")
 
                             await this.say(user.id,`Pesquise por algum produto.${this.defaultMessages.styleList}${this.defaultMessages.globalConfigs}`);
 
@@ -421,7 +421,7 @@ class Econobot {
 
                     await this.say(user.id,productSearchList);
 
-                    userStateInMemoryRepository.updateState(user.id,"CHOOSE_ITEM");
+                    userStateInMemoryRepository.setState(user.id,"CHOOSE_ITEM");
 
                     itemsListInMemoryRepository.addItemsToList({
                         id: user.id,
@@ -437,7 +437,7 @@ class Econobot {
                         
                         itemsListInMemoryRepository.removeItemsList(user.id);
 
-                        userStateInMemoryRepository.updateState(user.id,"SEARCH_PRODUCT");
+                        userStateInMemoryRepository.setState(user.id,"SEARCH_PRODUCT");
 
                         await this.say(user.id,'Lamento não ter encontrado o produto que você deseja. Por gentileza, pesquise novamente pelo produto');
 
@@ -478,7 +478,7 @@ class Econobot {
                         selected_item: product
                     });
 
-                    userStateInMemoryRepository.updateState(user.id,"SELECT_PRODUCT_QUANTY");
+                    userStateInMemoryRepository.setState(user.id,"SELECT_PRODUCT_QUANTY");
 
                     await this.say(user.id,`Digite a quantidade de *"${product.Descricao}"* que deseja adicionar ao carrinho`);
 
@@ -511,7 +511,7 @@ class Econobot {
 
                     userLastSelectedItemInMemoryRepository.removeSelectedItem(user.id);
 
-                    userStateInMemoryRepository.updateState(user.id,"SEARCH_PRODUCT");
+                    userStateInMemoryRepository.setState(user.id,"SEARCH_PRODUCT");
 
                     await this.say(user.id,`${message.body}X quantidade(s) de "${selected_item.Descricao}" adicionado(s) ao carrinho.`);
 
@@ -544,7 +544,7 @@ class Econobot {
 
                         "1": async () => {
 
-                            userStateInMemoryRepository.updateState(user.id,"SEARCH_PRODUCT");
+                            userStateInMemoryRepository.setState(user.id,"SEARCH_PRODUCT");
 
                             await this.say(user.id,'Qual o produto que você gostaria de pesquisar?');
 
@@ -557,7 +557,7 @@ class Econobot {
 
                             if( !verification ) return;
 
-                            userStateInMemoryRepository.updateState(user.id,"REMOVE_ITEM_FROM_CART");
+                            userStateInMemoryRepository.setState(user.id,"REMOVE_ITEM_FROM_CART");
 
                             await this.say(user.id,`Por gentileza, digite o número do item que você gostaria de remover do carrinho\n${shoppingList}`);
 
@@ -570,7 +570,7 @@ class Econobot {
 
                             if( !verification ) return;
 
-                            userStateInMemoryRepository.updateState(user.id,"UPDATE_ITEM_FROM_CART");
+                            userStateInMemoryRepository.setState(user.id,"UPDATE_ITEM_FROM_CART");
 
                             await this.say(user.id,`Por gentileza, digite o ID do produto que você gostaria de alterar a quantidade\n${shoppingList}`);
 
@@ -594,7 +594,7 @@ class Econobot {
 
                             if( !verification ) return;
 
-                            userStateInMemoryRepository.updateState(user.id,"DELIVERY_METHOD");
+                            userStateInMemoryRepository.setState(user.id,"DELIVERY_METHOD");
 
                             await this.say(user.id,'Escolha o método de entrega\n\n1 - Entregar em Casa\n2 - Vou retirar na loja');
 
@@ -650,7 +650,7 @@ class Econobot {
                             delivery_method:"ENTREGAR EM CASA"
                         });
 
-                        userStateInMemoryRepository.updateState(user.id,"CONFIRM_ADRESS")
+                        userStateInMemoryRepository.setState(user.id,"CONFIRM_ADRESS")
 
                         await this.say(user.id,`${user.nome_completo}, você confirma seu endereço para entrega ?\n\nSeu endereço:"${user.endereco}"\n\nS - Sim, confirmo\nN - Não, está incorreto`);
 
@@ -658,7 +658,7 @@ class Econobot {
 
                     }
 
-                    userStateInMemoryRepository.updateState(user.id,"CONFIRM_DELIVERY_METHOD")
+                    userStateInMemoryRepository.setState(user.id,"CONFIRM_DELIVERY_METHOD")
 
                     userDataInMemoryRepository.setUserData(user.id,{
                         delivery_method:"BUSCAR NA LOJA"
@@ -688,7 +688,7 @@ class Econobot {
 
                         userDataInMemoryRepository.removeUserData(user.id);
 
-                        userStateInMemoryRepository.updateState(user.id,"DELIVERY_METHOD");
+                        userStateInMemoryRepository.setState(user.id,"DELIVERY_METHOD");
 
                         await this.say(user.id,`Escolha o método de entrega\n1 - Entregar em Casa\n2 - Vou retirar na loja`);
                        
@@ -698,7 +698,7 @@ class Econobot {
 
                     const { totalShoppingCart } = await cartItemsService.calcItems(cart.id);
 
-                    userStateInMemoryRepository.updateState(user.id,"PAYMENT_OPTIONS");
+                    userStateInMemoryRepository.setState(user.id,"PAYMENT_OPTIONS");
 
                     await this.say(user.id,`Escolha a forma de pagamento desejada:\nTotal do pedido: ${toBRL(totalShoppingCart)}\n\n1 - Dinheiro\n2 - Cartão\n3- PIX`);
 
@@ -719,7 +719,7 @@ class Econobot {
 
                     }
 
-                    userStateInMemoryRepository.updateState(user.id,"CHOOSE_NEW_ITEM_QUANTY")
+                    userStateInMemoryRepository.setState(user.id,"CHOOSE_NEW_ITEM_QUANTY")
                     
                     userLastSelectedItemInMemoryRepository.addSelectedItem({
                         id: user.id,
@@ -752,7 +752,7 @@ class Econobot {
 
                     const shoppingList = await cartItemsService.getStatus(cart.id);
 
-                    userStateInMemoryRepository.updateState(user.id,"USER_SHOPPING_MANAGER_OPTIONS");
+                    userStateInMemoryRepository.setState(user.id,"USER_SHOPPING_MANAGER_OPTIONS");
 
                     userLastSelectedItemInMemoryRepository.removeSelectedItem(user.id);
 
@@ -780,7 +780,7 @@ class Econobot {
 
                     const shoppingList = await cartItemsService.getStatus(cart.id);
 
-                    userStateInMemoryRepository.updateState(user.id,"USER_SHOPPING_MANAGER_OPTIONS");
+                    userStateInMemoryRepository.setState(user.id,"USER_SHOPPING_MANAGER_OPTIONS");
 
                     this.say(user.id,`*O produto "${cartItems[index].nome_produto}" foi removido do carrinho.*\n\n${shoppingList ?? 'Carrinho Vazio 🛒 '}\n\n${this.defaultMessages.menuCheckout}`);
 
@@ -799,7 +799,7 @@ class Econobot {
                            
                             userData.payment_method = 'DINHEIRO';
 
-                            userStateInMemoryRepository.updateState(user.id,"EXCHANGED_OPTIONS");
+                            userStateInMemoryRepository.setState(user.id,"EXCHANGED_OPTIONS");
 
                             const  { totalShoppingCart } = await cartItemsService.calcItems(cart.id);
 
@@ -811,7 +811,7 @@ class Econobot {
                             
                             userData.payment_method = 'CARTÃO';
 
-                            userStateInMemoryRepository.updateState(user.id,"DEMAND_OBSERVATION");
+                            userStateInMemoryRepository.setState(user.id,"DEMAND_OBSERVATION");
 
                             await this.say(user.id,'Digite alguma observação para seu pedido\nExemplo: "Coloque a banana mais madura..."\n\nN - Não preciso de observação');
 
@@ -821,7 +821,7 @@ class Econobot {
 
                             userData.payment_method = 'PIX';
 
-                            userStateInMemoryRepository.updateState(user.id,"DEMAND_OBSERVATION");
+                            userStateInMemoryRepository.setState(user.id,"DEMAND_OBSERVATION");
 
                             await this.say(user.id,'Digite alguma observação para seu pedido\nExemplo: "Coloque a banana mais madura..."\n\nN - Não preciso de observação');
 
@@ -858,7 +858,7 @@ class Econobot {
 
                     if( lowerMessage === 'n' ){
 
-                        userStateInMemoryRepository.updateState(user.id,"DEMAND_OBSERVATION");
+                        userStateInMemoryRepository.setState(user.id,"DEMAND_OBSERVATION");
 
                         await this.say(user.id,'Digite alguma observação para seu pedido\nExemplo: "Coloque a banana mais madura..."\n\nN - Não preciso de observação');
 
@@ -868,7 +868,7 @@ class Econobot {
 
                     if( lowerMessage === 'v' ){
 
-                        userStateInMemoryRepository.updateState(user.id,"PAYMENT_OPTIONS");
+                        userStateInMemoryRepository.setState(user.id,"PAYMENT_OPTIONS");
 
                         await this.say(user.id,"Escolha a forma de pagamento desejada:\n1 - Dinheiro\n2 - Cartão\n3- PIX");
 
@@ -876,7 +876,7 @@ class Econobot {
 
                     }
 
-                    userStateInMemoryRepository.updateState(user.id,"DEMAND_EXCHANGE");
+                    userStateInMemoryRepository.setState(user.id,"DEMAND_EXCHANGE");
 
                     await this.say(user.id,"Você precisará de troco para quanto?");
 
@@ -893,7 +893,7 @@ class Econobot {
 
                     }
 
-                    userStateInMemoryRepository.updateState(user.id,"DEMAND_CONFIRMATION");
+                    userStateInMemoryRepository.setState(user.id,"DEMAND_CONFIRMATION");
 
                     const shoppingList = await cartItemsService.getStatus(cart.id);
 
@@ -927,7 +927,7 @@ class Econobot {
 
                     }
 
-                    userStateInMemoryRepository.updateState(user.id,"DEMAND_OBSERVATION");
+                    userStateInMemoryRepository.setState(user.id,"DEMAND_OBSERVATION");
 
                     const userData = userDataInMemoryRepository.getUserData(user.id);
 
@@ -978,7 +978,7 @@ class Econobot {
 
                     if( userData.payment_method === 'PIX' ){
 
-                        userStateInMemoryRepository.updateState(user.id,"PIX_PROOF");
+                        userStateInMemoryRepository.setState(user.id,"PIX_PROOF");
     
                         await this.say(user.id,`*Envie um PIX no valor de ${toBRL(totalShoppingCart)} para a seguinte chave:*`);
     
@@ -1007,7 +1007,7 @@ class Econobot {
 
                     }
 
-                    userStateInMemoryRepository.updateState(user.id,"FINALLY");
+                    userStateInMemoryRepository.setState(user.id,"FINALLY");
 
                     await this.say(user.id,"Recebemos seu pedido e ele está sendo processado !\nTempo médio para preparação é de 45min ⏱\n\nEconocompras\nNosso negócio é estar com você.")
 
@@ -1027,7 +1027,7 @@ class Econobot {
 
                     }
 
-                    userStateInMemoryRepository.updateState(user.id,"FINALLY");
+                    userStateInMemoryRepository.setState(user.id,"FINALLY");
 
                     await this.say(user.id,"Recebemos seu pedido e ele está sendo processado !\nTempo médio para preparação é de 45min ⏱\n\nEconocompras\nNosso negócio é estar com você.")
 
@@ -1053,7 +1053,7 @@ class Econobot {
 
                     if( lowerMessage === 'n'){
 
-                        userStateInMemoryRepository.updateState(user.id,"CHANGE_ADRESS")
+                        userStateInMemoryRepository.setState(user.id,"CHANGE_ADRESS")
 
                         await this.say(user.id,"Por favor, digite o seu novo endereço para entrega");
 
@@ -1061,7 +1061,7 @@ class Econobot {
 
                     }
 
-                    userStateInMemoryRepository.updateState(user.id,"PAYMENT_OPTIONS");
+                    userStateInMemoryRepository.setState(user.id,"PAYMENT_OPTIONS");
 
                     await this.say(user.id,'Perfeito ! obrigado por confirmar seu endereço 😍');
 
@@ -1073,7 +1073,7 @@ class Econobot {
 
                     await userInfosRepository.updateInfos(user.id,message.body);
 
-                    userStateInMemoryRepository.updateState(user.id,"PAYMENT_OPTIONS")
+                    userStateInMemoryRepository.setState(user.id,"PAYMENT_OPTIONS")
 
                     await this.say(user.id,'Obrigado por atualizar seu endereço 😁');
 
