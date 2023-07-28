@@ -7,32 +7,28 @@ class BotBusyInMemoryRepository {
 
     constructor(){
 
-        this.isBussy = [];
+        this.isBussy = new Map();
 
     }
 
-    findOne(id){
+    findBussy(id){
 
-        return this.isBussy.find( user => user.id == id );
-
-    }
-
-    add(id){
-
-        this.isBussy.push({
-            id,
-            isBusy: false
-        });
+        return this.isBussy.get(id);
 
     }
 
-    update(id,busy){
+    setBussy(id){
 
-        const userBusy = this.findOne(id);
-
-        userBusy.isBusy = busy;
+       this.isBussy.set(id,true);
 
     }
+
+    removeBussy(id){
+
+        this.isBussy.delete(id);
+
+    }
+
 
 
 }

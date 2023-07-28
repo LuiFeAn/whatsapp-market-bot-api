@@ -119,11 +119,10 @@ class Econobot {
 
             userLastMessageService.setLastMessage(message.from,lowerMessage);
 
-            const botBusy = botBusyRepository.findOne(message.from);
+            console.log(botBusyRepository.findBussy(user.id));
 
-            if( !botBusy ) botBusyRepository.add(message.from);
+            if( botBusyRepository.findBussy(user.id) ) return
 
-            if( botBusy?.isBusy ) return
 
             if( !user ){
 
@@ -1096,9 +1095,9 @@ class Econobot {
 
     }
 
-    async say(user,message,withDelay = true){
+    async say(userId,message,withDelay = true){
 
-        botBusyRepository.update(user,true);
+        botBusyRepository.setBussy(userId)
 
         if( withDelay ){
 
@@ -1106,9 +1105,9 @@ class Econobot {
 
         }
 
-        await this.client.sendMessage(user,message);
+        await this.client.sendMessage(userId,message);
 
-        botBusyRepository.update(user,false);
+        botBusyRepository.removeBussy(userId);
 
     }
     
