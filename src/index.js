@@ -1,6 +1,7 @@
 require('./server');
 const { Econobot } = require('./lib/econoBot');
-const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
+const { Client, LocalAuth } = require('whatsapp-web.js');
+const clearMemory = require("./routines/clearInMemory");
 
 const bot = new Econobot({
     botName:'Econobot',
@@ -11,6 +12,13 @@ const bot = new Econobot({
     }),
 });
 
-bot.initialize();
+( async () => {
+
+    await bot.initialize();
+
+    setInterval(() => clearMemory(bot),3 * 60 * 1000);
+
+})();
+
 
 module.exports = bot;

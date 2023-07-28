@@ -1,33 +1,28 @@
-const cron = require('node-cron');
-
-const botBusyInMemoryRepository = require('../repositories/inMemory/botBusyInMemoryRepository');
-const itemsListInMemoryRepository = require('../repositories/inMemory/itemsListInMemoryRepository');
-const userLastSelectedItemInMemoryRepository = require('../repositories/inMemory/userLastSelectedItemInMemoryRepository');
 const userLastMessageInMemory = require('../repositories/inMemory/userLastMessageInMemoryRepository');
+const clearMemoryService = require("../services/clearMemoryService");
 
-cron.schedule('*/4 * * * *', () => {
+function clearMemory(bot) {
 
-    const userLastMessage = userLastMessageInMemory.findAllLastMessages();
+  const lastMessages = userLastMessageInMemory.findAllLastMessages();
 
-    userLastMessage.forEach(function(user){
+  const currentTime = new Date();
 
-         const currentTime = new Date();
+  lastMessages.forEach(function (message) {
 
-         const registeredTime = new Date(user.time);
+    const currentUserTime = new Date(message.time);
 
-         const timeDifferenceInMilliseconds = currentTime - registeredTime;
+    const timeDifferenceMinutes = Math.floor((currentTime - currentUserTime) / (1000 * 60));
 
-         const timeLimit = 4 * 60 * 1000;
+    if (timeDifferenceMinutes >= 3) {
 
-         if (timeDifferenceInMilliseconds > timeLimit) {
+      clearMemoryService.clearUserLastProductAndList(message.id);
 
-             console.log('Usuário', user.id, 'não enviou mensagens nos últimos 4 minutos.');
+      bot.say(message.id,'Encerrei seu atendimento por falta te iteração, mas sinta-se a vontade para enviar mensagem a qualquer momento 😉')
 
-         } else {
+    }
 
-             console.log('Usuário', user.id, 'enviou uma mensagem nos últimos 4 minutos.');
-         }
+  });
 
-    });
+}
 
-});
+module.exports = clearMemory;

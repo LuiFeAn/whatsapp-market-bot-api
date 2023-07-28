@@ -79,7 +79,7 @@ class Econobot {
 
         this.client.on('message',this.handleMessage);
 
-        this.client.initialize();
+        return this.client.initialize();
 
     }
 
@@ -298,10 +298,6 @@ class Econobot {
                 userStateInMemoryRepository.setState(user.id,"USER_SHOPPING_MANAGER_OPTIONS");
 
                 clearMemoryService.clearUserLastProductAndList(user.id);
-
-                userLastSelectedItemInMemoryRepository.removeSelectedItem(user.id);
-
-                userDataInMemoryRepository.removeUserData(user.id);
 
                 await message.reply('Aguarde enquanto busco aqui seu carrinho... É rápidinho ! 😉');
 

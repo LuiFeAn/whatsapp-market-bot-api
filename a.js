@@ -1,6 +1,10 @@
 
 
-const a = new Set();
+const a = [];
 
 
-a.delete('aaa');
+a.forEach(function(item){
+
+    console.log(item.time);
+
+})
