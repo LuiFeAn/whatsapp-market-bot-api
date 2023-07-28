@@ -4,7 +4,7 @@ class CartService {
 
     async createCart(user_id){
 
-        const cart = await this.getCart(user_id);
+        const cart = await this.getCartFromUser(user_id);
 
         if( cart ) return;
 
@@ -12,11 +12,14 @@ class CartService {
 
     }
 
-    deleteCart(user_id){
-        
-    }
+    async deleteCart(cart_id){
 
-    async getCart(user_id){
+        return cartRepository.remove(cart_id);
+
+    }
+    
+
+    async getCartFromUser(user_id){
 
         const [ cart ] = await cartRepository.get(user_id);
 

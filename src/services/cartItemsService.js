@@ -69,7 +69,7 @@ class CartItemsService {
 
         const {  productsWithCalcPerItem, totalShoppingCart } = userShoppingCart;
 
-        let shoppingList = ''
+        let shoppingList = `Total: ${productsWithCalcPerItem.length} item(s) 🛒\n`;
 
         productsWithCalcPerItem.push({nome_produto:'',quantidade:''});
 

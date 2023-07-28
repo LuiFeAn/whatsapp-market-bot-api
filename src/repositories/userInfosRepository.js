@@ -13,7 +13,12 @@ class UserInfosRepository {
 
     }
 
-    updateInfos(){
+    updateInfos(userId,adress){
+
+        return query('ECONOBOT',{
+            query:'UPDATE usuario_informacoes SET endereco = ? WHERE usuario_id = ?',
+            values:[adress,userId]
+        })
 
     }
 

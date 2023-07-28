@@ -20,11 +20,11 @@ class CartRepository {
 
     }
 
-    async remove(user_id){
+    async remove(cart_id){
 
         return query("ECONOBOT",{
-            query:'REMOVE FROM carrinhos WHERE usuario_id = ?',
-            values:[user_id]
+            query:'DELETE FROM carrinhos WHERE id = ?',
+            values:[cart_id]
         });
 
 

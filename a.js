@@ -1,9 +1,6 @@
 
 
-const a = {
+const a = new Set();
 
-}
 
-a.test = '123';
-
-console.log(a);
+a.delete('aaa');

@@ -38,6 +38,7 @@ const cartItemsService = require("../services/cartItemsService");
 
 const validIndex = require("../utils/validIndex");
 const validOptions = require("../utils/validOptions");
+const onliFirstName = require("../utils/onlyFirstName");
 const currentDate = require("../utils/currentDate");
 
 class Econobot {
@@ -97,22 +98,22 @@ class Econobot {
     }
 
 
-    async sendMessageMediaMedia(mimeType,data,fileName){
+    async sendMessageMediaMedia(userId,mimeType,data,fileName){
 
         const media = new MessageMedia(mimeType,data,fileName);
 
-        await this.say(user.id,media);
+        await this.say(userId,media);
 
     }
 
     async handleMessage(message){
 
-        const user = await userRepository.findOne({
-            id: message.from
-        });
 
         try {
 
+            const user = await userRepository.findOne({
+                id: message.from
+            });
 
             const lowerMessage = message.body.toLowerCase();
 
@@ -245,13 +246,31 @@ class Econobot {
 
             const userState = userStateInMemoryRepository.findState(user.id);
 
-            const cart = await cartService.getCart(user.id);
+            const cart = await cartService.getCartFromUser(user.id);
+
+            user.nome_completo = onliFirstName(user.nome_completo);
 
             if( !userState ){
 
                 userStateInMemoryRepository.addState(user.id);
 
-                await this.say(user.id,`Olá, ${user.nome_completo} ! Que bom ver você de novo por aqui 😁. Como posso ajudar ?`)
+                await this.say(user.id,`Olá, ${user.nome_completo} ! Que bom ver você de novo por aqui 😁`);
+
+                if( cart ){
+
+                    const items = await cartItemsService.findItems(cart.id);
+
+                    userStateInMemoryRepository.updateState(user.id,"DEMAND_ALREADY_EXISTS_OPTIONS");
+                    
+                    await this.say(user.id,`${user.nome_completo}, identiquei que você tem um carrinho com ${items.length} item(s), você deseja continuar com esse carrinho?\n\n1 - Sim, desejo\n2 - Não, desejo realizar um novo pedido`);
+
+                    return
+
+                }
+
+                userStateInMemoryRepository.updateState(user.id,"CHOOSE_MENU_OPTION")
+
+                await this.say(user.id,"Como posso ajudar?");
 
                 await this.say(user.id,this.defaultMessages.selectMenuOption);
 
@@ -264,13 +283,16 @@ class Econobot {
 
 
             if(['c','carrinho'].includes(lowerMessage) 
-                && ['CHOOSE_MENU_OPTION','CHOOSE_ITEM','SELECT_PRODUCT_QUANTY','SEARCH_PRODUCT'].includes(userState.current_state)){
+                && ['CHOOSE_MENU_OPTION','CHOOSE_ITEM','SELECT_PRODUCT_QUANTY','SEARCH_PRODUCT','CONFIRM_DELIVERY_METHOD','EXCHANGED_OPTIONS'].includes(userState.current_state)){
 
-                const shoppingList = await cartItemsService.getStatus(cart.id);
 
-                if( shoppingList ){
+                if( !cart ){
 
-                    await message.reply('Aguarde enquanto busco aqui seu carrinho... É rápidinho ! 😉');
+                    userStateInMemoryRepository.updateState(user.id,"CHOOSE_MENU_OPTION");
+
+                    await this.say(user.id,`Para acessar o menu do carrinho, primeiramente você tem que realizar um pedido !\n1 - Fazer pedido`);
+
+                    return
 
                 }
 
@@ -279,6 +301,12 @@ class Econobot {
                 clearMemoryService.clearUserLastProductAndList(user.id);
 
                 userLastSelectedItemInMemoryRepository.removeSelectedItem(user.id);
+
+                userDataInMemoryRepository.removeUserData(user.id);
+
+                await message.reply('Aguarde enquanto busco aqui seu carrinho... É rápidinho ! 😉');
+
+                const shoppingList = await cartItemsService.getStatus(cart.id);
 
                 if( shoppingList ){
 
@@ -294,6 +322,35 @@ class Econobot {
 
             
             const handleUserState = {
+
+                "DEMAND_ALREADY_EXISTS_OPTIONS": async () => {
+
+                    const isValid = validOptions(['1','2'],lowerMessage);
+
+                    if( !isValid ){
+
+                        await this.say(user.id,`Você deseja continuar com esse carrinho?\n\n1 - Sim, desejo\n2 - Não, desejo realizar um novo pedido`);
+
+                        return
+
+                    }
+
+                    userStateInMemoryRepository.updateState(user.id,"CHOOSE_MENU_OPTION")
+
+                    if( lowerMessage === '2' ){
+
+                        await cartService.deleteCart(cart.id);
+
+                        await this.say(user.id,"Certo !")
+
+                        
+                    }
+
+                    await this.say(user.id,this.defaultMessages.selectMenuOption);
+
+                    await this.say(user.id,`${this.defaultMessages.initialMenu}${this.defaultMessages.styleList}${this.defaultMessages.globalConfigs}`);
+
+                },
 
                 'CHOOSE_MENU_OPTION': async () => {
 
@@ -313,7 +370,7 @@ class Econobot {
 
                         'default': async () => {
 
-                            await message.reply('Opção inválida.')
+                            await message.reply('Não compreendi o que você quis dizer 😥');
 
                         },
 
@@ -540,17 +597,19 @@ class Econobot {
 
                             userStateInMemoryRepository.updateState(user.id,"DELIVERY_METHOD");
 
-                            await this.say(user.id,'Escolha o método de entrega\n1 - Entregar em Casa\n2 - Vou retirar na loja');
+                            await this.say(user.id,'Escolha o método de entrega\n\n1 - Entregar em Casa\n2 - Vou retirar na loja');
 
                         }, 
 
                         "6": async () => {
 
-                            userStateInMemoryRepository.updateState(user.id,null);
+                            userStateInMemoryRepository.removeState(user.id);
 
                             clearMemoryService.clearUserLastProductAndList(user.id);
+
+                            userDataInMemoryRepository.removeUserData(user.id);
                             
-                            await this.say(user.id,`Certo. Até breve, ${user.nome_completo} !`)
+                            await this.say(user.id,`Certo. Até breve, ${user.nome_completo} !`);
 
                         },
 
@@ -560,7 +619,7 @@ class Econobot {
 
                         "default": async () =>{
 
-                            await this.say(user.id,`Ops ! opção inválida.\n${this.defaultMessages.menuCheckout}`);
+                            await this.say(user.id,`${this.defaultMessages.menuCheckout}`);
 
                         }
 
@@ -578,7 +637,7 @@ class Econobot {
 
                     if( !isValid ){
 
-                        await this.say(user.id,`Opção inválida.\n\nEscolha o método de entrega\n1 - Entregar em Casa\n2 - Vou retirar na loja`);
+                        await this.say(user.id,`Escolha o método de entrega\n1 - Entregar em Casa\n2 - Vou retirar na loja`);
 
                         return
 
@@ -608,7 +667,7 @@ class Econobot {
 
                     await this.say(user.id,`O nosso endereço é:\nRua Sebastião Lopes de Menzes 90, Biarro Nova Brasília, Campina Grande.`);
 
-                    await this.say(user.id,`${user.nome_completo}, você confirma vir buscar suas compras em nosso endereço?\n\nS - Sim, desejo buscar\nN - Não, prefiro escolher outro método${this.defaultMessages.styleList}${this.defaultMessages.globalConfigs
+                    await this.say(user.id,`${user.nome_completo}, você confirma vir buscar suas compras em nosso endereço?\n\nS - Sim, desejo buscar\nN - Não, prefiro escolher outro método\n${this.defaultMessages.globalConfigs
                     }`);
 
                 },
@@ -745,7 +804,7 @@ class Econobot {
 
                             const  { totalShoppingCart } = await cartItemsService.calcItems(cart.id);
 
-                            await this.say(user.id,`Total do pedido: ${toBRL(totalShoppingCart)}\nVocê precisará de troco ?\nS - Sim, irei precisar de troco\nN - Não preciso de troco\nV - Voltar\nC - Carrinho`);
+                            await this.say(user.id,`Total do pedido: ${toBRL(totalShoppingCart)}\nVocê precisará de troco ?\n\nS - Sim, irei precisar de troco\nN - Não preciso de troco\nV - Voltar\nC - Carrinho`);
 
                         },
 
@@ -753,7 +812,9 @@ class Econobot {
                             
                             userData.payment_method = 'CARTÃO';
 
-                            userDataInMemoryRepository.setUserData(user.id,userData);
+                            userStateInMemoryRepository.updateState(user.id,"DEMAND_OBSERVATION");
+
+                            await this.say(user.id,'Digite alguma observação para seu pedido\nExemplo: "Coloque a banana mais madura..."\n\nN - Não preciso de observação');
 
                         },
 
@@ -761,32 +822,9 @@ class Econobot {
 
                             userData.payment_method = 'PIX';
 
-                            const userShoppingCart = await shoppingCartService.calcUserTotalShoppingCart(user.id);
+                            userStateInMemoryRepository.updateState(user.id,"DEMAND_OBSERVATION");
 
-                            const {  totalShoppingCart } = userShoppingCart;
-
-                            await this.say(user.id,`*Envie um PIX no valor de ${toBRL(totalShoppingCart)} para a seguinte chave:*`);
-
-                            await this.say(user.id,`*${process.env.ECONOCOMPRAS_PIX_USER}*`);
-
-                            await this.say(user.id,'*É possível também realizar o pagamento escaneando o qrCode abaixo:*');
-
-                            const payload = QrCodePix({
-                                version: "01",
-                                key:process.env.ECONOCOMPRAS_PIX_KEY,
-                                name: process.env.ECONOCOMPRAS_PIX_USER,
-                                transactionId: v4().slice(25),
-                                message: "ECONOCOMPRAS",
-                                value: totalShoppingCart,
-                            });
-                    
-                            const qrCode = await payload.base64();
-
-                            const [ resourceType, base64String ] = qrCode.split(',');
-
-                            await this.sendMessageMediaMedia('image/jpg',base64String,'image.jpg');
-
-                            await this.say(user.id,'Após efetuar o pagamento, por gentileza envie um print do comprovante 😁');
+                            await this.say(user.id,'Digite alguma observação para seu pedido\nExemplo: "Coloque a banana mais madura..."\n\nN - Não preciso de observação');
 
                         },
 
@@ -805,13 +843,14 @@ class Econobot {
 
                 },
 
+
                 "EXCHANGED_OPTIONS": async () => {
 
                     const isValid = validOptions(['s','n','v'],lowerMessage);
 
                     if( !isValid ){
 
-                        await this.say(user.id,"Você precisará de troco ?\nS - Sim, irei precisar de troco\nN - Não preciso de troco\nV - Voltar\nC - Carrinho");
+                        await this.say(user.id,"Você precisará de troco ?\n\nS - Sim, irei precisar de troco\nN - Não preciso de troco\nV - Voltar\nC - Carrinho");
 
                         return;
 
@@ -822,7 +861,7 @@ class Econobot {
 
                         userStateInMemoryRepository.updateState(user.id,"DEMAND_OBSERVATION");
 
-                        await this.say(user.id,'Digite alguma observação para seu pedido\nExemplo: "Coloque a banana mais madura..."');
+                        await this.say(user.id,'Digite alguma observação para seu pedido\nExemplo: "Coloque a banana mais madura..."\n\nN - Não preciso de observação');
 
                         return
 
@@ -845,6 +884,28 @@ class Econobot {
 
                 },
 
+                "DEMAND_OBSERVATION": async () => {
+
+                    const userData = userDataInMemoryRepository.getUserData(user.id);
+
+                    if( lowerMessage != "n" ){
+
+                        userData.observation = message.body;
+
+                    }
+
+                    userStateInMemoryRepository.updateState(user.id,"DEMAND_CONFIRMATION");
+
+                    const shoppingList = await cartItemsService.getStatus(cart.id);
+
+                    const { totalShoppingCart } = await cartItemsService.calcItems(cart.id);
+            
+                    const demandStatus = `*Confirme se seu pedido está correto e escolha finalizar 👇*\n\n*Pedido: xxxx*\n*Horário: ${currentDate()}*\n*Cliente: ${user.nome_completo}*\n*Celular: ${user.numero_telefone}*\n*Entrega: ${userData.delivery_method}*\n*Endereço: ${user.endereco}*\n*Complemento: ${userData?.complement ?? "N/A"}*\n\n------------------------------\n\n${shoppingList}\n\n------------------------------\n\n*Taxa de entrega: ${userData.delivery_method === 'BUSCAR NA LOJA' ? 'N/A*' : 'R$ 5,00 R$*'}\n*Total: ${userData.delivery_method === 'BUSCAR NA LOJA' ? toBRL(totalShoppingCart) :'(Carrinho + Taxa de entrega)' + "" + toBRL(totalShoppingCart + 5 )}*\n*Pagamento: ${userData.payment_method}*\n*Troco para: ${ userData?.exchange_value ? toBRL(userData.exchange_value) : 'N/A' }*\n*Observação: ${userData?.observation ? userData.observation + "*" : "N/A*"}\n*Obrigado!*\n\n------------------------------\n\nF - Finalizar\nC - Cancelar pedido`
+
+                    await this.say(user.id,demandStatus);
+
+                },
+
                 "DEMAND_EXCHANGE": async () => {
 
                     const exchange = Number(lowerMessage);
@@ -857,38 +918,169 @@ class Econobot {
 
                     }
 
-                    userStateInMemoryRepository.updateState(user.id,"DEMAND_CONFIRMATION");
-
-                    const userData = userDataInMemoryRepository.getUserData(user.id);
-
-                    userData.exchange_value = exchange;
-
-                    await this.say(user.id,`Perfeito. Troco para ${exchange}`);
-
-                    const shoppingList = await cartItemsService.getStatus(cart.id);
-
                     const { totalShoppingCart } = await cartItemsService.calcItems(cart.id);
 
-                    await this.say(user.id,`*Confirme se seu pedido está correto e escolha finalizar 👇*\n\n*Pedido: xxxx*\n*Horário: ${currentDate()}*\n*Cliente: ${user.nome_completo}*\n*Celular: ${user.numero_telefone}*\n*Entrega: ${userData.delivery_method}*\n*Endereço: ${user.endereco}*\n*Complemento: ${userData.complement ?? "N/A"}*\n${this.defaultMessages.styleList}${shoppingList}${this.defaultMessages.styleList}*Taxa de entrega: ${userData.delivery_method === 'BUSCAR NA LOJA' ? 'N/A*' : 'R$ 5,00 R$*'}\n*Total: ${userData.delivery_method === 'BUSCAR NA LOJA' ? toBRL(totalShoppingCart) : toBRL(totalShoppingCart + 5)}}*\n*Pagamento: ${userData.payment_method}*\n*Troco para: ${ userData?.exchange_value ? toBRL(userData.exchange_value) : 'N/A' }*\n*Obrigado!*${this.defaultMessages.styleList}\n\nF - Finalizar\nC - Cancelar pedido`);
+                    if( exchange < totalShoppingCart ){
 
-                },
-
-                "DEMAND_CONFIRMATION": async () => {
-
-
-                },
-
-                "CONFIRM_ADRESS": async () => {
-
-                    if( lowerMessage.includes('n') ){
-                        
-                        await this.say(user.id,'Perfeito ! obrigado por confirmar seu endereço 😍');
+                        await this.say(user.id,`O total do seu pedido é ${toBRL(totalShoppingCart)}. Por gentileza, informe um valor válido.`);
 
                         return
 
                     }
 
+                    userStateInMemoryRepository.updateState(user.id,"DEMAND_OBSERVATION");
+
+                    const userData = userDataInMemoryRepository.getUserData(user.id);
+
+                    userData.exchange_value = exchange;
+
+                    await this.say(user.id,`Perfeito. Troco para ${toBRL(exchange)}`);
+
+                    await this.say(user.id,'Digite alguma observação para seu pedido\nExemplo: "Coloque a banana mais madura..."\n\nN - Não preciso de observação');
+
+
                 },
+
+                "DEMAND_CONFIRMATION": async () => {
+
+                    const isValid = validOptions(['f','c'],lowerMessage);
+
+                    if( !isValid ){
+
+                        await message.reply('Por gentileza, digite uma opção válida');
+
+                        return;
+
+                    }
+
+                    if( lowerMessage === 'c' ){
+
+                        clearMemoryService.clearUserLastProductAndList(user.id);
+
+                        userLastSelectedItemInMemoryRepository.removeSelectedItem(user.id);
+
+                        userDataInMemoryRepository.removeUserData(user.id);
+
+                        await this.say('Pedido cancelado.');
+
+                        return
+
+                    }
+
+                    const userData = userDataInMemoryRepository.getUserData(user.id);
+
+                    let { totalShoppingCart } = await cartItemsService.calcItems(cart.id);
+
+                    if( userData.delivery_method === 'ENTREGAR EM CASA' ){
+
+                        totalShoppingCart = totalShoppingCart + 5;
+
+                    }
+
+                    if( userData.payment_method === 'PIX' ){
+
+                        userStateInMemoryRepository.updateState(user.id,"PIX_PROOF");
+    
+                        await this.say(user.id,`*Envie um PIX no valor de ${toBRL(totalShoppingCart)} para a seguinte chave:*`);
+    
+                        await this.say(user.id,`*${process.env.ECONOCOMPRAS_PIX_USER}*`);
+    
+                        await this.say(user.id,'*É possível também realizar o pagamento escaneando o qrCode abaixo:*');
+    
+                        const payload = QrCodePix({
+                            version: "01",
+                            key:process.env.ECONOCOMPRAS_PIX_KEY,
+                            name: process.env.ECONOCOMPRAS_PIX_USER,
+                            transactionId: v4().slice(25),
+                            message: "ECONOCOMPRAS",
+                            value: totalShoppingCart,
+                        });
+                
+                        const qrCode = await payload.base64();
+    
+                        const [ resourceType, base64String ] = qrCode.split(',');
+    
+                        await this.sendMessageMediaMedia(user.id,'image/jpg',base64String,'image.jpg');
+    
+                        await this.say(user.id,'Após efetuar o pagamento, por gentileza envie um print do comprovante 😁');
+
+                        return
+
+                    }
+
+                    userStateInMemoryRepository.updateState(user.id,"FINALLY");
+
+                    await this.say(user.id,"Recebemos seu pedido e ele está sendo processado !\nTempo médio para preparação é de 45min ⏱\n\nEconocompras\nNosso negócio é estar com você.")
+
+
+
+                },
+
+                "PIX_PROOF": async () => {
+
+                    const isValid = validOptions(['image'],message.type);
+
+                    if( !isValid ){
+
+                       await this.say(user.id,'Por gentileza, envie uma imagem com o seu comprovante de pagamento.');
+
+                       return
+
+                    }
+
+                    userStateInMemoryRepository.updateState(user.id,"FINALLY");
+
+                    await this.say(user.id,"Recebemos seu pedido e ele está sendo processado !\nTempo médio para preparação é de 45min ⏱\n\nEconocompras\nNosso negócio é estar com você.")
+
+                },
+
+                "FINALLY": async () => {
+
+                    await this.say(user.id,`${user.nome_completo}, já recebemos seu pedido e ele está atualmente em processo !\nAguarde. Brevemente voltarei com mais informações 😁`);
+
+                },
+
+                "CONFIRM_ADRESS": async () => {
+
+                    const isValid = validOptions(['s','n'],lowerMessage);
+
+                    if( !isValid ){
+
+                        await this.say(user.id,'Por favor, digite uma opção válida');
+
+                        return
+
+                    }
+
+                    if( lowerMessage === 'n'){
+
+                        userStateInMemoryRepository.updateState(user.id,"CHANGE_ADRESS")
+
+                        await this.say(user.id,"Por favor, digite o seu novo endereço para entrega");
+
+                        return
+
+                    }
+
+                    userStateInMemoryRepository.updateState(user.id,"PAYMENT_OPTIONS");
+
+                    await this.say(user.id,'Perfeito ! obrigado por confirmar seu endereço 😍');
+
+                    await this.say(user.id,"Escolha a forma de pagamento desejada:\n1 - Dinheiro\n2 - Cartão\n3- PIX");
+
+                },
+
+                "CHANGE_ADRESS": async () => {
+
+                    await userInfosRepository.updateInfos(user.id,message.body);
+
+                    userStateInMemoryRepository.updateState(user.id,"PAYMENT_OPTIONS")
+
+                    await this.say(user.id,'Obrigado por atualizar seu endereço 😁');
+
+                    await this.say(user.id,"Escolha a forma de pagamento desejada:\n1 - Dinheiro\n2 - Cartão\n3- PIX");
+
+                }
 
             }
 
@@ -898,7 +1090,7 @@ class Econobot {
 
             console.log(err);
 
-            this.say(user.id,'Lamento. Infelizmente um erro interno ocorreu ! Tente novamente mais tarde.');
+            this.say(message.from,'Lamento. Infelizmente um erro interno ocorreu ! Tente novamente mais tarde.');
 
         }
 
