@@ -12,6 +12,8 @@ class DemandController {
 
     async partialUpdate(req,res){
 
+        const { id } = req.params;
+
         const { status } = req.body;
 
         await demandRepository.partialUpdate({

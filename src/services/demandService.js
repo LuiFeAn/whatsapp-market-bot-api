@@ -10,11 +10,11 @@ class DemandService {
 
     }
 
-    async partialUpdate({ status }){
+    async partialUpdate({ id, status }){
 
         if( status ){
 
-            await demandRepository.updateStatus(status);
+            await demandRepository.updateStatus(id,status);
 
         }
 
