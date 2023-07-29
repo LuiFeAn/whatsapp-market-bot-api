@@ -10,6 +10,14 @@ class DemandService {
 
     }
 
+    getDemand(demandId){
+
+        const demand = demandRepository.findOne(demandId);
+
+        return demand;
+
+    }
+
     async partialUpdate({ id, status }){
 
         if( status ){

@@ -11,16 +11,16 @@ class CartRepository {
 
     }
 
-    get(user_id){
+    findOne({ cartId, userId }){
 
         return query('ECONOBOT',{
-            query:'SELECT * FROM carrinhos WHERE usuario_id = ?',
-            values:[user_id]
+            query:'SELECT * FROM carrinhos WHERE id = ? OR usuario_id = ?',
+            values:[cartId,userId]
         })
 
     }
 
-    async remove(cart_id){
+    remove(cart_id){
 
         return query("ECONOBOT",{
             query:'DELETE FROM carrinhos WHERE id = ?',

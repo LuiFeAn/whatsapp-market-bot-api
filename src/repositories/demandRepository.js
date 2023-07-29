@@ -2,6 +2,33 @@ const query = require("../database/mysql-async");
 
 class DemandRepository {
 
+    commonSelectQuery
+
+    constructor(){
+
+        this.commonSelectQuery = `
+        SELECT
+        usuarios.id as usuario_id, 
+        usuarios.nome_completo,
+        usuario_informacoes.numero_telefone,
+        usuario_informacoes.endereco
+        pedidos.metodo_entrega,
+        pedidos.metodo_pagamento,
+        pedidos.observacao,
+        pedidos.horario,
+        pedidos.total,
+        pedidos.troco
+        FROM pedidos
+        JOIN carrinhos
+        ON carrinhos.id = pedidos.carrinho_id
+        JOIN usuarios 
+        ON usuarios.id = carrinhos.usuario_id
+        JOIN usuario_informacoes 
+        ON usuario_informacoes.usuario_id = usuarios.id
+        `
+
+    }
+
     create({ cartId, deliveryMethod, paymentMethod, observation, total, exchange }){
 
         return query('ECONOBOT',{
@@ -14,29 +41,17 @@ class DemandRepository {
     findAll(){
 
         return query('ECONOBOT',{
-            query:`
-
-                SELECT
-                usuarios.id as usuario_id, 
-                usuarios.nome_completo,
-                usuario_informacoes.numero_telefone,
-                usuario_informacoes.endereco
-                pedidos.metodo_entrega,
-                pedidos.metodo_pagamento,
-                pedidos.observacao,
-                pedidos.horario,
-                pedidos.total,
-                pedidos.troco
-                FROM pedidos
-                JOIN carrinhos
-                ON carrinhos.id = pedidos.carrinho_id
-                JOIN usuarios 
-                ON usuarios.id = carrinhos.usuario_id
-                JOIN usuario_informacoes 
-                ON usuario_informacoes.usuario_id = usuarios.id
-
-            `,
+            query: this.commonSelectQuery,
             values:[]
+        });
+
+    }
+
+    findOne(demandId){
+
+        return query('ECONOBOT',{
+            query: `${this.commonSelectQuery} WHERE id = ?`,
+            values:[demandId]
         });
 
     }

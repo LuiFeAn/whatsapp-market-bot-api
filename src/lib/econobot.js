@@ -244,7 +244,9 @@ class Econobot {
 
             const userState = userStateInMemoryRepository.getState(user.id);
 
-            const cart = await cartService.getCartFromUser(user.id);
+            const cart = await cartService.getCart({
+                userId: user.id
+            });
 
             user.nome_completo = onliFirstName(user.nome_completo);
 
