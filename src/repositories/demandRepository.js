@@ -50,6 +50,15 @@ class DemandRepository {
 
     }
 
+    updateStatus(demandId,demandStatus){
+
+        return query('ECONOBOT',{
+            query:'UPDATE FROM pedidos SET status = ? WHERE id = ?',
+            values:[demandId,demandStatus]
+        });
+
+    }
+
 }
 
 module.exports = new DemandRepository();

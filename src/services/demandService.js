@@ -10,6 +10,16 @@ class DemandService {
 
     }
 
+    async partialUpdate({ status }){
+
+        if( status ){
+
+            await demandRepository.updateStatus(status);
+
+        }
+
+    }
+
 }
 
 module.exports = new DemandService();
