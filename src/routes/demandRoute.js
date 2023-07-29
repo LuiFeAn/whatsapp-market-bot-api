@@ -1,7 +1,9 @@
 const { Router } = require("express");
 
-const botOptions = Router();
+const demandRoutes = Router();
 
 const demandController = require("../controllers/demandController");
 
-botOptions.patch('/',demandController.partialUpdate);
+demandRoutes.patch('/',demandController.partialUpdate);
+
+module.exports = demandRoutes 
