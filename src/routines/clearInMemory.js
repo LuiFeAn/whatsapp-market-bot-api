@@ -16,13 +16,18 @@ function clearMemory(bot) {
 
     const timeDifferenceMinutes = Math.floor((currentTime - currentUserTime) / (1000 * 60));
 
-    if (timeDifferenceMinutes >= 3 && userState.current_state != "FINALLY") {
+    if( userState?.current_state != "FINALLY" ){
 
-      clearMemoryService.clearUserLastProductAndList(message.id);
+      if( timeDifferenceMinutes >= 3 ){
 
-      bot.say(message.id,'Encerrei seu atendimento por falta te iteração, mas sinta-se a vontade para enviar mensagem a qualquer momento 😉')
+          clearMemoryService.clearUserLastProductAndList(message.id);
+
+          bot.say(message.id,'Encerrei seu atendimento por falta te iteração, mas sinta-se a vontade para enviar mensagem a qualquer momento 😉')
+
+      }
 
     }
+
 
   });
 
