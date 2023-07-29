@@ -579,7 +579,7 @@ class Econobot {
 
                             await cartItemsService.removeAllItems(cart.id);
 
-                            await this.say(user.id,`Seu carrinho foi esvaziado. O que deseja fazer agora?\n\b${this.defaultMessages.menuCheckout}`);
+                            await this.say(user.id,`Seu carrinho foi esvaziado.\n\n${this.defaultMessages.menuCheckout}`);
 
                         },
 
