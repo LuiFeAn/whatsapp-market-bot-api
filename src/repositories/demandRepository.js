@@ -10,6 +10,36 @@ class DemandRepository {
         });
 
     }
+
+    findAll(){
+
+        return query('ECONOBOT',{
+            query:`
+
+                SELECT
+                usuarios.id as usuario_id, 
+                usuarios.nome_completo,
+                usuario_informacoes.numero_telefone,
+                usuario_informacoes.endereco
+                pedidos.metodo_entrega,
+                pedidos.metodo_pagamento,
+                pedidos.observacao,
+                pedidos.horario,
+                pedidos.total,
+                pedidos.troco
+                FROM pedidos
+                JOIN carrinhos
+                ON carrinhos.id = pedidos.carrinho_id
+                JOIN usuarios 
+                ON usuarios.id = carrinhos.usuario_id
+                JOIN usuario_informacoes 
+                ON usuario_informacoes.usuario_id = usuarios.id
+
+            `,
+            values:[]
+        });
+
+    }
     
     delete(cart_id){
 
