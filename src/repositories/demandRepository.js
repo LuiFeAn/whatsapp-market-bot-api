@@ -2,11 +2,11 @@ const query = require("../database/mysql-async");
 
 class DemandRepository {
 
-    create(cart_id){
+    create({ cartId, deliveryMethod, paymentMethod, observation, total, exchange }){
 
         return query('ECONOBOT',{
-            query:'INSERT INTO pedidos VALUES (NULL,?)',
-            values:[cart_id]
+            query:'INSERT INTO pedidos (carrinho_id, metodo_entrega, metodo_pagamento, observacao, total, troco) VALUES (?,?,?,?,?,?);',
+            values:[cartId,deliveryMethod,paymentMethod,observation,total,exchange]
         });
 
     }
