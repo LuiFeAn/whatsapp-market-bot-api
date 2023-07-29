@@ -4,6 +4,6 @@ const routes = Router();
 
 const demandRoute = require("./demandRoute");
 
-routes.use('/routes',demandRoute);
+routes.use('/pedidos',demandRoute);
 
 module.exports = routes;

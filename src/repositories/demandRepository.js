@@ -11,7 +11,7 @@ class DemandRepository {
         usuarios.id as usuario_id, 
         usuarios.nome_completo,
         usuario_informacoes.numero_telefone,
-        usuario_informacoes.endereco
+        usuario_informacoes.endereco,
         pedidos.metodo_entrega,
         pedidos.metodo_pagamento,
         pedidos.observacao,

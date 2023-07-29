@@ -2,11 +2,13 @@ const cartRepository = require("../repositories/cartRepository");
 
 class CartService {
 
-    async createCart(user_id){
+    async createCart(userId){
 
-        const cart = await this.getCartFromUser(user_id);
+        const cart = await this.getCart({
+            userId
+        });
 
-        return cartRepository.create(user_id);
+        return cartRepository.create(userId);
 
     }
 

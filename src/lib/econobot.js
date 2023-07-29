@@ -42,6 +42,8 @@ const validOptions = require("../utils/validOptions");
 const onliFirstName = require("../utils/onlyFirstName");
 const currentDate = require("../utils/currentDate");
 
+const geoLocation = require('geolib');
+
 class Econobot {
 
     client
@@ -108,6 +110,25 @@ class Econobot {
     }
 
     async handleMessage(message){
+
+        
+        if( message.type === 'location' ){
+
+            const econoComprasLocation = {
+                latitude: -7.214535, 
+                longitude: -35.856197
+            }
+
+            const { description, ...rest } = message.location;
+
+            const userLocation = rest;
+
+            const distancia = getDistance(econoComprasLocation,userLocation);
+
+            const km = convertDistance(distancia,'km');
+            
+
+        }
 
 
         try {
