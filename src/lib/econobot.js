@@ -896,8 +896,6 @@ class Econobot {
 
                     const date = currentDate();
 
-                    userData.demand_time = toTimeStamp(date);
-
                     const verifyMethod = userData.delivery_method === 'BUSCAR NA LOJA';
 
                     const demandTotal =  verifyMethod ? totalShoppingCart : totalShoppingCart + 5;
