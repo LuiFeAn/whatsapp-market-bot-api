@@ -41,7 +41,6 @@ const validIndex = require("../utils/validIndex");
 const validOptions = require("../utils/validOptions");
 const onliFirstName = require("../utils/onlyFirstName");
 const currentDate = require("../utils/currentDate");
-const toTimeStamp = require("../utils/toTimeStamp");
 
 class Econobot {
 
@@ -961,15 +960,6 @@ class Econobot {
 
                     const userData = userDataInMemoryRepository.getUserData(user.id);
 
-                    await demandRepository.create({
-                        cartId: cart.id,
-                        deliveryMethod: userData.delivery_method,
-                        paymentMethod: userData.payment_method,
-                        exchange: userData?.exchange_value,
-                        observation: userData?.observation,
-                        total: userData.demand_total
-                    });
-
                     if( userData.payment_method === 'PIX' ){
 
                         userStateInMemoryRepository.setState(user.id,"PIX_PROOF");
@@ -1001,6 +991,15 @@ class Econobot {
 
                     }
 
+                    await demandRepository.create({
+                        cartId: cart.id,
+                        deliveryMethod: userData.delivery_method,
+                        paymentMethod: userData.payment_method,
+                        exchange: userData?.exchange_value,
+                        observation: userData?.observation,
+                        total: userData.demand_total
+                    });
+
                     userStateInMemoryRepository.setState(user.id,"FINALLY");
 
                     await this.say(user.id,"Recebemos seu pedido e ele está sendo processado !\nTempo médio para preparação é de 45min ⏱\n\nEconocompras\nNosso negócio é estar com você.")
@@ -1020,6 +1019,17 @@ class Econobot {
                        return
 
                     }
+
+                    const userData = userDataInMemoryRepository.getUserData(user.id);
+
+                    await demandRepository.create({
+                        cartId: cart.id,
+                        deliveryMethod: userData.delivery_method,
+                        paymentMethod: userData.payment_method,
+                        exchange: userData?.exchange_value,
+                        observation: userData?.observation,
+                        total: userData.demand_total
+                    });
 
                     userStateInMemoryRepository.setState(user.id,"FINALLY");
 
