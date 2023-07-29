@@ -17,6 +17,7 @@ class DemandController {
         const { status } = req.body;
 
         await demandRepository.partialUpdate({
+            id,
             status
         });
 
