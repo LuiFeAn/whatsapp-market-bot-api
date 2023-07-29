@@ -1,6 +1,6 @@
 
 
-module.exports = function delay(timing = 1000){
+module.exports = function delay(timing = 500){
 
     return new Promise(function(resolve,reject){
 

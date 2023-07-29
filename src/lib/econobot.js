@@ -31,6 +31,7 @@ const userLastSelectedItemInMemoryRepository = require("../repositories/inMemory
 const userStateInMemoryRepository = require("../repositories/inMemory/userStateInMemoryRepository");
 const userDataInMemoryRepository = require("../repositories/inMemory/userDataInMemoryRepository");
 const userLastMessageService = require('../services/userLastMessageInMemoryService');
+const demandRepository = require("../repositories/demandRepository");
 
 const clearMemoryService = require("../services/clearMemoryService");
 const cartService = require("../services/userCartService");
@@ -40,6 +41,7 @@ const validIndex = require("../utils/validIndex");
 const validOptions = require("../utils/validOptions");
 const onliFirstName = require("../utils/onlyFirstName");
 const currentDate = require("../utils/currentDate");
+const toTimeStamp = require("../utils/toTimeStamp");
 
 class Econobot {
 
@@ -243,8 +245,6 @@ class Econobot {
 
             const userState = userStateInMemoryRepository.getState(user.id);
 
-            console.log(userState);
-
             const cart = await cartService.getCartFromUser(user.id);
 
             user.nome_completo = onliFirstName(user.nome_completo);
@@ -282,7 +282,7 @@ class Econobot {
 
 
             if(['c','carrinho'].includes(lowerMessage) 
-                && ['CHOOSE_MENU_OPTION','CHOOSE_ITEM','SELECT_PRODUCT_QUANTY','SEARCH_PRODUCT','CONFIRM_DELIVERY_METHOD','EXCHANGED_OPTIONS'].includes(userState.current_state)){
+                && ['CHOOSE_MENU_OPTION','CHOOSE_ITEM','SELECT_PRODUCT_QUANTY','SEARCH_PRODUCT','CONFIRM_DELIVERY_METHOD','EXCHANGED_OPTIONS','DEMAND_CONFIRMATION'].includes(userState.current_state)){
 
 
                 if( !cart ){
@@ -894,8 +894,18 @@ class Econobot {
                     const shoppingList = await cartItemsService.getStatus(cart.id);
 
                     const { totalShoppingCart } = await cartItemsService.calcItems(cart.id);
+
+                    const date = currentDate();
+
+                    userData.demand_time = toTimeStamp(date);
+
+                    const verifyMethod = userData.delivery_method === 'BUSCAR NA LOJA';
+
+                    const demandTotal =  verifyMethod ? totalShoppingCart : totalShoppingCart + 5;
+
+                    userData.demand_total = demandTotal;
             
-                    const demandStatus = `*Confirme se seu pedido está correto e escolha finalizar 👇*\n*Horário: ${currentDate()}*\n*Cliente: ${user.nome_completo}*\n*Celular: ${user.numero_telefone}*\n*Entrega: ${userData.delivery_method}*\n*Endereço: ${user.endereco}*\n\n------------------------------\n\n${shoppingList}\n\n------------------------------\n\n*Taxa de entrega: ${userData.delivery_method === 'BUSCAR NA LOJA' ? 'N/A*' : 'R$ 5,00 R$*'}\n*Total: ${userData.delivery_method === 'BUSCAR NA LOJA' ? toBRL(totalShoppingCart) :'(Carrinho + Taxa de entrega)' + "" + toBRL(totalShoppingCart + 5 )}*\n*Pagamento: ${userData.payment_method}*\n*Troco para: ${ userData?.exchange_value ? toBRL(userData.exchange_value) : 'N/A' }*\n*Observação: ${userData?.observation ? userData.observation + "*" : "N/A*"}\n*Obrigado!*\n\n------------------------------\n\nF - Finalizar\nC - Cancelar pedido`
+                    const demandStatus = `*Confirme se seu pedido está correto e escolha finalizar 👇*\n\n*Horário: ${date}*\n*Cliente: ${user.nome_completo}*\n*Celular: ${user.numero_telefone}*\n*Entrega: ${userData.delivery_method}*\n*Endereço: ${user.endereco}*\n\n------------------------------\n\n${shoppingList}\n\n------------------------------\n\n*Taxa de entrega: ${userData.delivery_method === 'BUSCAR NA LOJA' ? 'N/A*' : 'R$ 5,00 R$*'}\n*Total: ${verifyMethod ? '' : '( Carrinho + Taxa de Entrega )'} ${toBRL(demandTotal)}*\n*Pagamento: ${userData.payment_method}*\n*Troco para: ${ userData?.exchange_value ? toBRL(userData.exchange_value) : 'N/A' }*\n*Observação: ${userData?.observation ? userData.observation + "*" : "N/A*"}\n*Obrigado!*\n\n------------------------------\n\nF - Finalizar\nC - Carrinho`
 
                     await this.say(user.id,demandStatus);
 
@@ -938,7 +948,7 @@ class Econobot {
 
                 "DEMAND_CONFIRMATION": async () => {
 
-                    const isValid = validOptions(['f','c'],lowerMessage);
+                    const isValid = validOptions(['f'],lowerMessage);
 
                     if( !isValid ){
 
@@ -948,35 +958,23 @@ class Econobot {
 
                     }
 
-                    if( lowerMessage === 'c' ){
-
-                        clearMemoryService.clearUserLastProductAndList(user.id);
-
-                        userLastSelectedItemInMemoryRepository.removeSelectedItem(user.id);
-
-                        userDataInMemoryRepository.removeUserData(user.id);
-
-                        await this.say('Pedido cancelado.');
-
-                        return
-
-                    }
 
                     const userData = userDataInMemoryRepository.getUserData(user.id);
 
-                    let { totalShoppingCart } = await cartItemsService.calcItems(cart.id);
-
-                    if( userData.delivery_method === 'ENTREGAR EM CASA' ){
-
-                        totalShoppingCart = totalShoppingCart + 5;
-
-                    }
+                    await demandRepository.create({
+                        cartId: cart.id,
+                        deliveryMethod: userData.delivery_method,
+                        paymentMethod: userData.payment_method,
+                        exchange: userData?.exchange_value,
+                        observation: userData?.observation,
+                        total: userData.demand_total
+                    });
 
                     if( userData.payment_method === 'PIX' ){
 
                         userStateInMemoryRepository.setState(user.id,"PIX_PROOF");
     
-                        await this.say(user.id,`*Envie um PIX no valor de ${toBRL(totalShoppingCart)} para a seguinte chave:*`);
+                        await this.say(user.id,`*Envie um PIX no valor de ${userData.demand_total} para a seguinte chave:*`);
     
                         await this.say(user.id,`*${process.env.ECONOCOMPRAS_PIX_USER}*`);
     
@@ -988,7 +986,7 @@ class Econobot {
                             name: process.env.ECONOCOMPRAS_PIX_USER,
                             transactionId: v4().slice(25),
                             message: "ECONOCOMPRAS",
-                            value: totalShoppingCart,
+                            value: userData.demand_total,
                         });
                 
                         const qrCode = await payload.base64();

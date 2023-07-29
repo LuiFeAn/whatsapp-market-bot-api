@@ -68,9 +68,17 @@ CREATE TABLE pedidos(
 
      id INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
      carrinho_id INT(10) NOT NULL,
+     metodo_entrega VARCHAR(20) NOT NULL,
+     metodo_pagamento VARCHAR(20) NOT NULL,
+     observacao VARCHAR(500),
+     horario TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+     total DECIMAL(10,2) NOT NULL,
+     troco DECIMAL(10,2),
+     status VARCHAR(30) DEFAULT 'EM ANÁLISE',
      FOREIGN KEY (carrinho_id) REFERENCES carrinhos(id) ON UPDATE CASCADE ON DELETE CASCADE
 
 );
+
 
 
 
