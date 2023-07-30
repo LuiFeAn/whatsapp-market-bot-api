@@ -9,18 +9,15 @@ class UserRepository {
             query:`
 
                 SELECT 
-                usuarios.id,nome_completo,current_step,
-                usuario_informacoes.endereco,usuario_informacoes.numero_telefone,
-                niveis_acesso.nivel_acesso 
+                usuarios.*,
+                usuario_informacoes.numero_telefone,
+                usuario_informacoes.endereco,
+                usuario_informacoes.bairro,
+                usuario_informacoes.numero_casa,
+                usuario_informacoes.complemento
                 FROM usuarios
                 LEFT JOIN usuario_informacoes
                 ON usuario_informacoes.usuario_id = usuarios.id
-                JOIN niveis_acesso
-                ON niveis_acesso.id = usuarios.nivel_acesso_id
-                WHERE 
-                usuario_informacoes.numero_telefone = ? 
-                OR 
-                usuarios.id = ?
 
 
             `,
@@ -31,11 +28,11 @@ class UserRepository {
 
     }
 
-    insertUser({ id, nome_completo, current_step, nivel_acesso_id }){
+    insertUser({ id, nome_completo}){
 
         return query('ECONOBOT',{
-            query:'INSERT INTO usuarios VALUES(?,?,?,?)',
-            values:[id,nome_completo.toUpperCase(),current_step,nivel_acesso_id]
+            query:'INSERT INTO usuarios VALUES(?,?)',
+            values:[id,nome_completo]
         });
 
     }

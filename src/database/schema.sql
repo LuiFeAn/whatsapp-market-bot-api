@@ -2,22 +2,10 @@ CREATE DATABASE econobot;
 
 USE econobot;
 
-CREATE TABLE niveis_acesso(
-
-    id int(10) NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    nivel_acesso VARCHAR(100) NOT NULL
-
-);
-
-
-INSERT INTO niveis_acesso VALUES(NULL,'CLIENTE');
-
 CREATE TABLE usuarios(
 
     id VARCHAR(30) NOT NULL PRIMARY KEY,
-    nome_completo VARCHAR(100) NOT NULL,
-    nivel_acesso_id INT(10) NOT NULL,
-    FOREIGN KEY (nivel_acesso_id) REFERENCES niveis_acesso(id) ON DELETE CASCADE ON UPDATE CASCADE
+    nome_completo VARCHAR(100) NOT NULL
 
 );
 
@@ -26,7 +14,10 @@ CREATE TABLE usuario_informacoes(
     id int(10) NOT NULL PRIMARY KEY AUTO_INCREMENT,
     usuario_id VARCHAR(30) NOT NULL,
     numero_telefone VARCHAR(25) NOT NULL,
-    endereco VARCHAR(500) NOT NULL,
+    endereco VARCHAR(100) NOT NULL,
+    bairro VARCHAR(65) NOT NULL,
+    numero_casa VARCHAR(30000) NOT NULL,
+    complemento VARCHAR(100) NOT NULL,
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE ON UPDATE CASCADE
 
 );
@@ -78,6 +69,17 @@ CREATE TABLE pedidos(
      FOREIGN KEY (carrinho_id) REFERENCES carrinhos(id) ON UPDATE CASCADE ON DELETE CASCADE
 
 );
+
+
+CREATE TABLE taxa_entrega(
+
+    id INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    km_maximo INT(10) NOT NULL,
+    km_frete INT(10) NOT NULL,
+    taxa  DECIMAL(10,2) NOT NULL
+
+);
+
 
 
 

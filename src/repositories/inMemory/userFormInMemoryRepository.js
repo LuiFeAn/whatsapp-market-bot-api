@@ -6,27 +6,25 @@ class UserFormRepository {
 
     constructor(){
 
-        this.users = []
+        this.users = new Map();
 
     }
 
-    insert(userForm){
+    setUser(id){
 
-       this.users.push(userForm);
+       this.users.set(id)
 
     }
 
-    findOne(id){
+    getUser(id){
 
-        const user = this.users.find( user => user.id === id );
-
-        return user;
+        return this.users.get(id);
         
     }
 
     delete(id){
 
-        this.users.filter( user => user.id === id );
+        this.users.delete(id);
 
     }
 
