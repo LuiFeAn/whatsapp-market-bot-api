@@ -80,6 +80,8 @@ CREATE TABLE taxa_entrega(
 
 );
 
+INSERT INTO taxa_entrega VALUES(NULL,7,5,5.00);
+
 
 
 
