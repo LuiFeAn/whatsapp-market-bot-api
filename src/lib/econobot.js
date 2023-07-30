@@ -24,8 +24,6 @@ const productRepository = require("../repositories/productRepository");
 
 //Repositórios em memória
 
-const UserInfosForm = require("./userForm");
-const userFormInMemoryRepository = require('../repositories/inMemory/userFormInMemoryRepository');
 const itemsListInMemoryRepository = require("../repositories/inMemory/itemsListInMemoryRepository");
 const userLastSelectedItemInMemoryRepository = require("../repositories/inMemory/userLastSelectedItemInMemoryRepository");
 const userStateInMemoryRepository = require("../repositories/inMemory/userStateInMemoryRepository");
@@ -36,6 +34,7 @@ const demandRepository = require("../repositories/demandRepository");
 const clearMemoryService = require("../services/clearMemoryService");
 const cartService = require("../services/userCartService");
 const cartItemsService = require("../services/cartItemsService");
+const deliveryFeeService = require('../services/deliveryFeeService');
 
 const validIndex = require("../utils/validIndex");
 const validOptions = require("../utils/validOptions");
@@ -983,9 +982,10 @@ class Econobot {
 
                     const date = currentDate();
 
-                    const verifyMethod = userData.delivery_method === 'BUSCAR NA LOJA';
+                    const verifyMethod = userData.delivery_fee;
 
-                    const demandTotal =  verifyMethod ? totalShoppingCart : totalShoppingCart + 5;
+                    const demandTotal =  verifyMethod ?
+                     totalShoppingCart : totalShoppingCart + userData.delivery_fee;
 
                     userData.demand_total = demandTotal;
             
@@ -1216,7 +1216,13 @@ class Econobot {
 
                     const km = convertDistance(distancia,'km').toFixed(1);
 
-                    if( km >= 7 ){
+                    const [ delivery ] = await deliveryFeeService.find();
+
+                    const { km_maximo: kmMaximo, km_frete: kmFrete, taxa } = delivery;
+
+                    const kmRest = (kmMaximo - kmFrete) - 0.1
+
+                    if( km >= kmMaximo ){
 
                         await this.say(user.id,"Lamento, mas no momento não efetuamos entregas para a sua localização 😥");
 
@@ -1224,9 +1230,11 @@ class Econobot {
 
                     }
 
-                    if( km >= 5 && km < 6.9 ){
+                    if( km >= kmFrete && km < kmRest ){
 
-                        await this.say(user.id,`Obrigado, ${user.nome_completo} ! a sua taxa de entreg será de R$ 5,00.`);
+                        await this.say(user.id,`Obrigado, ${user.nome_completo} ! a sua taxa de entreg será de ${toBRL(taxa)}`);
+
+                        userData.delivery_fee = taxa;
 
                     }
 
