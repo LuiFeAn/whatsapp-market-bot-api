@@ -42,7 +42,7 @@ const validOptions = require("../utils/validOptions");
 const onliFirstName = require("../utils/onlyFirstName");
 const currentDate = require("../utils/currentDate");
 
-const geoLocation = require('geolib');
+const { getDistance, convertDistance } = require('geolib');
 
 class Econobot {
 
@@ -111,25 +111,6 @@ class Econobot {
 
     async handleMessage(message){
 
-        
-        if( message.type === 'location' ){
-
-            const econoComprasLocation = {
-                latitude: -7.214535, 
-                longitude: -35.856197
-            }
-
-            const { description, ...rest } = message.location;
-
-            const userLocation = rest;
-
-            const distancia = getDistance(econoComprasLocation,userLocation);
-
-            const km = convertDistance(distancia,'km');
-            
-
-        }
-
 
         try {
 
@@ -137,36 +118,41 @@ class Econobot {
                 id: message.from
             });
 
+            const [ userInfos ]= await userInfosRepository.findOne({
+                userId: message.from
+            });
+
             const lowerMessage = message.body.toLowerCase();
 
             userLastMessageService.setLastMessage(message.from,lowerMessage);
 
-            if( botBusyRepository.findBussy(user.id) ) return
+            const userData = userDataInMemoryRepository.getUserData(message.from); 
 
+            if( botBusyRepository.findBussy( message.from) ) return
 
             if( !user ){
 
-                const userInMemory = userFormInMemoryRepository.findOne(message.from);
+                if( !userData ){
 
-                if( !userInMemory ){
-
-                    const newInMemoryUser = new UserInfosForm(message.from,'WAITING_MESSAGE_NAME');
-
-                    userFormInMemoryRepository.insert(newInMemoryUser);;
-
-                    await this.say(message.from,`Olá ! me chamo ${this.botName} e sou o assistente virtual do ECONOCOMPRAS ! 😁🤖✌`);
-        
-                    await this.say(message.from,'Notei que você é novo por aqui. Por tanto, para eu iniciar seu atendimento, peço que por gentileza me forneça algumas informações !');
-        
-                    await this.say(message.from,'Primeiramente, qual é seu nome completo ? 👀');
-
-                    return;
-
+                    userDataInMemoryRepository.setUserData(message.from,{
+                        currentState:'WAITING_MESSAGE_NAME'
+                    });
 
                 }
-
         
                 const handleUserRegisterSteps = {
+
+                    'USER_FIRST_CONTACT': async () => {
+
+                        await this.say(message.from,`Olá ! me chamo ${this.botName} e sou o assistente virtual do ECONOCOMPRAS ! 😁🤖✌`);
+        
+                        await this.say(message.from,'Notei que você é novo por aqui. Por tanto, para eu iniciar seu atendimento, peço que por gentileza me forneça algumas informações !');
+            
+                        await this.say(message.from,'Primeiramente, qual é seu nome completo ? 👀');
+    
+                        return;
+
+                    },
         
                     'WAITING_MESSAGE_NAME': async () => {
         
@@ -178,88 +164,28 @@ class Econobot {
         
                         }
 
-                        
-                        userInMemory.setCurrentStep("WAITING_MESSAGE_NUMBER");
-
                         await message.reply(`Perfeito, ${message.body}`);
 
-                        userInMemory.setName(message.body);
+                        userData.nome_completo = message.body;
+
+                        await userRepository.insertUser({
+                            id: message.from,
+                            nome_completo: message.body
+                        });
+
+                        userStateInMemoryRepository.setState(message.from,'WAITING_MESSAGE_NUMBER');
 
                         await this.say(message.from,'Agora peço me informe o seu telefone para contato 📳');
 
-        
-                    },
-        
-                    'WAITING_MESSAGE_NUMBER': async () => {
-        
-
-                        if( !validPhoneNumber(message.body) ){
-        
-                            await message.reply('Ops ! parece que este número de telefone é inválido. Por favor, envie um número de telefone válido');
-        
-                            return;
-        
-                        }
-
-                        const numberExists = await userRepository.findOne({
-                            numero_telefone: message.body
-                        });
-
-                        if( numberExists ){
-
-                            await message.reply('Este número já se encontra cadastrado no nosso sistema. Por gentileza, informe outro número');
-
-                            return
-
-                        }
-
-                        userInMemory.setCurrentStep("WAITING_MESSAGE_ADRESS");
-
-                        userInMemory.setNumber(message.body);
-        
-                        await message.reply('Show !')
-        
-                        await this.say(message.from,'E por último, mas não menos importante: seu endereço 📬');
-
-        
-                    },
-        
-                    'WAITING_MESSAGE_ADRESS': async () => {
-        
-                        userInMemory.setAdress(message.body);
-
-                        userInMemory.setCurrentStep("CHOOSE_MENU_OPTION");
-        
-                        const { id, nome_completo, endereco, numero_telefone, current_step } = userInMemory;
-
-                        await userRepository.insertUser({
-                            id,
-                            nome_completo,
-                            current_step,
-                            nivel_acesso_id: 1
-                        });
-
-                        await userInfosRepository.insertInfos({
-                            usuario_id: id,
-                            endereco,
-                            numero_telefone
-                        });
-                        
-                        userStateInMemoryRepository.setState(message.from,"CHOOSE_MENU_OPTION");
-        
-                        await this.say(message.from,'Perfeito ! seu cadastro está completo 😎😆');
-
-                        await this.say(message.from,`${this.defaultMessages.selectMenuOption}\n${this.defaultMessages.initialMenu}`);
-
-                        userFormInMemoryRepository.delete(message.from);
-                        
         
                     },
                     
         
                 }
         
-                return await handleUserRegisterSteps[userInMemory.current_step]();
+                await handleUserRegisterSteps[userData?.currentState ?? 'USER_FIRST_CONTACT']();
+
+                return
         
             }
 
@@ -272,6 +198,20 @@ class Econobot {
             user.nome_completo = onliFirstName(user.nome_completo);
 
             if( !userState ){
+
+                if( !userInfos ){
+
+                    userStateInMemoryRepository.setState(user.id,"WAITING_MESSAGE_NUMBER");
+
+                    userDataInMemoryRepository.setUserData(user.id,{
+                        continue_register: true
+                    });
+
+                    await this.say(user.id,"Você não concluiu totalmente seu cadastro, por gentileza, me informe seu número de telefone.")
+
+                    return
+
+                }
 
                 userStateInMemoryRepository.setState(user.id,"CHOOSE_MENU_OPTION");
 
@@ -297,7 +237,8 @@ class Econobot {
 
                 await this.say(user.id,`${this.defaultMessages.initialMenu}${this.defaultMessages.styleList}${this.defaultMessages.globalConfigs}`);
 
-                return;
+                return
+
 
 
             }
@@ -339,6 +280,173 @@ class Econobot {
 
             
             const handleUserState = {
+
+                'WAITING_MESSAGE_NUMBER': async () => {
+        
+
+                    if( !validPhoneNumber(message.body) ){
+    
+                        await message.reply('Ops ! parece que este número de telefone é inválido. Por favor, envie um número de telefone válido');
+    
+                        return;
+    
+                    }
+
+                    const [ numberExists ] = await userInfosRepository.findOne({
+                        phoneNumber: message.body
+                    });
+
+                    if( numberExists ){
+
+                        await message.reply('Este número já se encontra cadastrado no nosso sistema. Por gentileza, informe outro número');
+
+                        return
+
+                    }
+
+                    userStateInMemoryRepository.setState(user.id,"WAITING_MESSAGE_ADRESS");
+
+                    userData.numero_telefone = message.body;
+    
+                    await message.reply('Show !')
+    
+                    await this.say(message.from,'Agora me informe seu endereço 📬');
+
+    
+                },
+    
+                'WAITING_MESSAGE_ADRESS': async () => {
+    
+                    if( message.body.length >= 100 ){
+
+                        await this.say(message.from,'Por gentileza, me informe um endereço válido');
+
+                        return
+
+                    }
+                    
+                    userStateInMemoryRepository.setState(user.id,"WAITING_NEIGHBORHOOD")
+
+                    userData.endereco = message.body;
+
+                    await this.say(message.from,'Agora, por gentileza, me informe seu bairro.');
+                    
+
+                },
+
+                "WAITING_NEIGHBORHOOD": async () => {
+
+                    if( message.body.length >= 65 ){
+
+                        await this.say(message.from,'Por gentileza, me informe um bairro válido');
+
+                        return
+
+                    }
+
+                    userStateInMemoryRepository.setState(user.id,"WAITING_HOME_NUMER")
+
+                    userData.bairro = message.body;
+
+                    await this.say(message.from,'Agora, por gentileza, me informe o número da sua residência');
+
+
+                },
+
+                "WAITING_HOME_NUMER": async () => {
+
+
+                    if( !Number(message.body) || Number(message.body) <= 0 || message.body.length > 30000 ){
+
+                        await this.say(message.from,'Por favor, informe o número de sua resdiência corretamente');
+
+                        return
+
+                    }
+
+                    userStateInMemoryRepository.setState(user.id,"WAITING_COMPLEMENT");
+
+                    userData.numero_casa = message.body;
+
+                    await this.say(message.from,'E por último, mas não menos importante: Adicione um complemento para facilitar a localização de sua residência !')
+
+
+                },
+
+                "WAITING_COMPLEMENT": async () => {
+
+                    if( message.body.length >= 100 ){
+
+                        await this.say(user.id,'Por gentileza, informe um complemento válido');
+
+                        return
+
+                    }
+
+                    userData.complemento = message.body;
+
+                    for(const prop in userData ){
+
+                       if( typeof userData[prop] === 'string' ){
+
+                            userData[prop] = userData[prop].trim().toUpperCase();
+
+                       }
+
+                    };
+
+                    const { endereco, numero_telefone, bairro, numero_casa, complemento  } = userData;
+
+                    if( !userInfos ){
+
+                        try{
+
+                            await userInfosRepository.insertInfos({
+                                usuario_id: user.id,
+                                endereco,
+                                numero_telefone,
+                                bairro,
+                                numero_casa,
+                                complemento
+                            })
+    
+                        }catch(err){
+    
+                            await this.say(user.id,'Não foi possível concluir seu cadastro. Tente novamente mais tarde');
+    
+                            return
+    
+                        }
+
+                        userDataInMemoryRepository.removeUserData(user.id);
+                    
+                        userStateInMemoryRepository.setState(user.id,"CHOOSE_MENU_OPTION");
+        
+                        await this.say(message.from,'Perfeito ! seu cadastro está completo 😎😆');
+    
+                        await this.say(message.from,`${this.defaultMessages.selectMenuOption}\n${this.defaultMessages.initialMenu}`);
+
+                        return
+
+                    }
+
+                    await Promise.all[
+                        userInfosRepository.updateAdress(user.id,endereco),
+                        userInfosRepository.updateNeighBorHood(user.id,bairro),
+                        userInfosRepository.updateHouseNumber(user.id,numero_casa),
+                        userInfosRepository.updateComplement(user.id,complemento)
+                    ]
+
+                    userStateInMemoryRepository.setState(user.id,"SEND_GEO_LOCATION");    
+
+                    await this.say(user.id,`${user.nome_completo}, obrigado por atualizar seu endereço ! 😁`);
+
+                    await this.say(user.id,`${user.nome_completo}, me envie sua localização atual para que eu possa calcular o frete !`);
+
+                
+                    
+                    
+                },
 
                 "DEMAND_ALREADY_EXISTS_OPTIONS": async () => {
 
@@ -648,47 +756,6 @@ class Econobot {
 
                 },
 
-                "DELIVERY_METHOD": async () => {
-
-                    const isValid = validOptions(['1','2'],lowerMessage);
-
-                    if( !isValid ){
-
-                        await this.say(user.id,`Escolha o método de entrega\n1 - Entregar em Casa\n2 - Vou retirar na loja`);
-
-                        return
-
-                    }
-
-                    //Armazena a opção selecionada no repositoróio de "fórmulário" do usuário
-
-                    if( lowerMessage === '1' ){
-
-                        userDataInMemoryRepository.setUserData(user.id,{
-                            delivery_method:"ENTREGAR EM CASA"
-                        });
-
-                        userStateInMemoryRepository.setState(user.id,"CONFIRM_ADRESS")
-
-                        await this.say(user.id,`${user.nome_completo}, você confirma seu endereço para entrega ?\n\nSeu endereço:"${user.endereco}"\n\nS - Sim, confirmo\nN - Não, está incorreto`);
-
-                        return
-
-                    }
-
-                    userStateInMemoryRepository.setState(user.id,"CONFIRM_DELIVERY_METHOD")
-
-                    userDataInMemoryRepository.setUserData(user.id,{
-                        delivery_method:"BUSCAR NA LOJA"
-                    });
-
-                    await this.say(user.id,`O nosso endereço é:\nRua Sebastião Lopes de Menzes 90, Biarro Nova Brasília, Campina Grande.`);
-
-                    await this.say(user.id,`${user.nome_completo}, você confirma vir buscar suas compras em nosso endereço?\n\nS - Sim, desejo buscar\nN - Não, prefiro escolher outro método\n${this.defaultMessages.globalConfigs
-                    }`);
-
-                },
-
                 "CONFIRM_DELIVERY_METHOD": async () => {
 
                     const isValid = validOptions(['s','n'],lowerMessage);
@@ -809,8 +876,6 @@ class Econobot {
 
                     const validPayment = ['1','2','3'];
 
-                    const userData = userDataInMemoryRepository.getUserData(user.id);
-
                     const handlePayment = {
 
                         '1': async () => {
@@ -903,7 +968,6 @@ class Econobot {
 
                 "DEMAND_OBSERVATION": async () => {
 
-                    const userData = userDataInMemoryRepository.getUserData(user.id);
 
                     if( lowerMessage != "n" ){
 
@@ -955,8 +1019,6 @@ class Econobot {
 
                     userStateInMemoryRepository.setState(user.id,"DEMAND_OBSERVATION");
 
-                    const userData = userDataInMemoryRepository.getUserData(user.id);
-
                     userData.exchange_value = exchange;
 
                     await this.say(user.id,`Perfeito. Troco para ${toBRL(exchange)}`);
@@ -978,8 +1040,6 @@ class Econobot {
 
                     }
 
-
-                    const userData = userDataInMemoryRepository.getUserData(user.id);
 
                     if( userData.payment_method === 'PIX' ){
 
@@ -1041,8 +1101,6 @@ class Econobot {
 
                     }
 
-                    const userData = userDataInMemoryRepository.getUserData(user.id);
-
                     await demandRepository.create({
                         cartId: cart.id,
                         deliveryMethod: userData.delivery_method,
@@ -1078,7 +1136,7 @@ class Econobot {
 
                     if( lowerMessage === 'n'){
 
-                        userStateInMemoryRepository.setState(user.id,"CHANGE_ADRESS")
+                        userStateInMemoryRepository.setState(user.id,"WAITING_MESSAGE_ADRESS")
 
                         await this.say(user.id,"Por favor, digite o seu novo endereço para entrega");
 
@@ -1086,25 +1144,103 @@ class Econobot {
 
                     }
 
-                    userStateInMemoryRepository.setState(user.id,"PAYMENT_OPTIONS");
+                    userStateInMemoryRepository.setState(user.id,"SEND_GEO_LOCATION");
 
                     await this.say(user.id,'Perfeito ! obrigado por confirmar seu endereço 😍');
 
-                    await this.say(user.id,"Escolha a forma de pagamento desejada:\n1 - Dinheiro\n2 - Cartão\n3- PIX");
+                    await this.say(user.id,`${user.nome_completo}, me envie sua localização atual para que eu possa calcular o frete !`);
 
                 },
 
-                "CHANGE_ADRESS": async () => {
+                "DELIVERY_METHOD": async () => {
 
-                    await userInfosRepository.updateInfos(user.id,message.body);
+                    const isValid = validOptions(['1','2'],lowerMessage);
 
-                    userStateInMemoryRepository.setState(user.id,"PAYMENT_OPTIONS")
+                    if( !isValid ){
 
-                    await this.say(user.id,'Obrigado por atualizar seu endereço 😁');
+                        await this.say(user.id,`Escolha o método de entrega\n1 - Entregar em Casa\n2 - Vou retirar na loja`);
 
-                    await this.say(user.id,"Escolha a forma de pagamento desejada:\n1 - Dinheiro\n2 - Cartão\n3- PIX");
+                        return
+
+                    }
+
+                    //Armazena a opção selecionada no repositoróio de "fórmulário" do usuário
+
+                    if( lowerMessage === '1' ){
+
+                        userDataInMemoryRepository.setUserData(user.id,{
+                            delivery_method:"ENTREGAR EM CASA"
+                        });
+
+                        userStateInMemoryRepository.setState(user.id,"CONFIRM_ADRESS")
+
+                        await this.say(user.id,`${user.nome_completo}, você confirma seu endereço para entrega ?\n\nSeu endereço:"${user.endereco}"\n\nS - Sim, confirmo\nN - Não, está incorreto`);
+
+                        return
+
+                    }
+
+                    userStateInMemoryRepository.setState(user.id,"CONFIRM_DELIVERY_METHOD")
+
+                    userDataInMemoryRepository.setUserData(user.id,{
+                        delivery_method:"BUSCAR NA LOJA"
+                    });
+
+                    await this.say(user.id,`O nosso endereço é:\nRua Sebastião Lopes de Menzes 90, Biarro Nova Brasília, Campina Grande.`);
+
+                    await this.say(user.id,`${user.nome_completo}, você confirma vir buscar suas compras em nosso endereço?\n\nS - Sim, desejo buscar\nN - Não, prefiro escolher outro método\n${this.defaultMessages.globalConfigs
+                    }`);
+
+                },
+
+                "SEND_GEO_LOCATION": async () => {
+
+                    if( !validOptions(['location'], message.type )){
+
+                        await this.say(user.id,`${user.nome_completo}, por gentileza, envie sua localização.`);
+
+                        return
+
+                    }
+
+                    const econoComprasLocation = {
+                        latitude: -7.214535, 
+                        longitude: -35.856197
+                    }
+        
+                    const { description, ...rest } = message.location;
+        
+                    const userLocation = rest;
+        
+                    const distancia = getDistance(econoComprasLocation,userLocation);
+
+                    const km = convertDistance(distancia,'km').toFixed(1);
+
+                    if( km >= 7 ){
+
+                        await this.say(user.id,"Lamento, mas no momento não efetuamos entregas para a sua localização 😥");
+
+                        return
+
+                    }
+
+                    if( km >= 5 && km < 6.9 ){
+
+                        await this.say(user.id,`Obrigado, ${user.nome_completo} ! a sua taxa de entreg será de R$ 5,00.`);
+
+                    }
+
+                    userStateInMemoryRepository.setState(user.id,"PAYMENT_OPTIONS");
+
+                    const { totalShoppingCart } = await cartItemsService.calcItems(cart.id);
+
+
+                    await this.say(user.id,`Escolha a forma de pagamento desejada:\nTotal do pedido: ${toBRL(totalShoppingCart)}\n\n1 - Dinheiro\n2 - Cartão\n3- PIX`);
+
 
                 }
+
+                
 
             }
 
