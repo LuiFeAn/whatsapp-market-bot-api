@@ -460,7 +460,7 @@ class Econobot {
 
                     }
 
-                    userStateInMemoryRepository.setState(user.id,"CHOOSE_MENU_OPTION")
+                    userStateInMemoryRepository.setState(user.id,"SEARCH_PRODUCT")
 
                     if( lowerMessage === '2' ){
 
@@ -473,7 +473,7 @@ class Econobot {
 
                     await this.say(user.id,this.defaultMessages.selectMenuOption);
 
-                    await this.say(user.id,`Escolha a opção desejada ou digite "C" para acessar o carrinho\n1 - Pesquisar Produto(s)`);
+                    await this.say(user.id,`Pesquise por algum produto ou digite "C" para acessar o carrinho\n1 - Pesquisar Produto(s)`);
 
                 },
 
