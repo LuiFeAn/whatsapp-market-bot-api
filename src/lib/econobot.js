@@ -1175,7 +1175,7 @@ class Econobot {
 
                         userStateInMemoryRepository.setState(user.id,"CONFIRM_ADRESS")
 
-                        await this.say(user.id,`${user.nome_completo}, você confirma seu endereço para entrega ?\n\nSeu endereço:"${user.endereco}"\n\nS - Sim, confirmo\nN - Não, está incorreto`);
+                        await this.say(user.id,`${user.nome_completo}, você confirma seu endereço para entrega ?\n\nEndereço: ${user.endereco}\nBairro: ${userInfos.bairro}\nNúmero da residência: ${userInfos.numero_casa}\nComplemento: ${userInfos.complemento}\n\nS - Sim, confirmo\nN - Não, está incorreto`);
 
                         return
 
