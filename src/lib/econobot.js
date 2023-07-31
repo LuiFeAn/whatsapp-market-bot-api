@@ -217,11 +217,15 @@ class Econobot {
 
                     const items = await cartItemsService.findItems(cart.id);
 
-                    userStateInMemoryRepository.setState(user.id,"DEMAND_ALREADY_EXISTS_OPTIONS");
-                    
-                    await this.say(user.id,`${user.nome_completo}, identiquei que você tem um carrinho com ${items.length} item(s), você deseja continuar com esse carrinho?\n\n1 - Sim, desejo\n2 - Não, desejo realizar um novo pedido`);
+                    if( items.length > 0 ){
 
-                    return
+                        userStateInMemoryRepository.setState(user.id,"DEMAND_ALREADY_EXISTS_OPTIONS");
+                    
+                        await this.say(user.id,`${user.nome_completo}, identiquei que você tem um carrinho com ${items.length} item(s), você deseja continuar com esse carrinho?\n\n1 - Sim, desejo\n2 - Não, desejo realizar um novo pedido`);
+    
+                        return
+
+                    }
 
                 }
 
