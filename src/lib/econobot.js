@@ -114,7 +114,7 @@ class Econobot {
         try {
 
 
-            const [ user, userInfos ] = await Promise.all([
+            const [ user, [ userInfos ] ] = await Promise.all([
                 userRepository.findOne({
                     id: message.from
                 }),
