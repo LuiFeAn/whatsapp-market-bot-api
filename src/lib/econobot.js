@@ -130,18 +130,14 @@ class Econobot {
             if( botBusyRepository.findBussy( message.from) ) return
 
             if( !user ){
-
-                if( !userData ){
-
-                    userDataInMemoryRepository.setUserData(message.from,{
-                        currentState:'WAITING_MESSAGE_NAME'
-                    });
-
-                }
         
                 const handleUserRegisterSteps = {
 
                     'USER_FIRST_CONTACT': async () => {
+
+                        userDataInMemoryRepository.setUserData(message.from,{
+                            currentState:'WAITING_MESSAGE_NAME'
+                        });
 
                         await this.say(message.from,`Olá ! me chamo ${this.botName} e sou o assistente virtual do ECONOCOMPRAS ! 😁🤖✌`);
         
@@ -149,7 +145,6 @@ class Econobot {
             
                         await this.say(message.from,'Primeiramente, qual é seu nome completo ? 👀');
     
-                        return;
 
                     },
         
@@ -176,7 +171,6 @@ class Econobot {
 
                         await this.say(message.from,'Agora peço me informe o seu telefone para contato 📳');
 
-        
                     },
                     
         
