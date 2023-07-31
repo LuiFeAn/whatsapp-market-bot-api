@@ -61,7 +61,7 @@ class Econobot {
 
         this.defaultMessages = {
             selectMenuOption:`*A cada etapa algumas opções serão apresentadas para você, e basta você responder com o número ou a letra da a opção desejada*`,
-            initialMenu:'*Escolha a opção desejada*\n1 - Fazer pedido',
+            initialMenu:'*Escolha a opção desejada*\n\n1 - Fazer pedido',
             menuCheckout:"*O que deseja fazer ? digite a opção desejada.*\n\n1 - Pesquisar novo(s) produto(s)\n2 - Deletar Produto\n3 - Alterar quantidade de produto\n4 - Limpar carrinho\n5 - Finalizar pedido\n6 - Finalizar atendimento",
             paymentMenu:"",
             globalConfigs:"C - Carrinho",
@@ -235,7 +235,7 @@ class Econobot {
 
                 await this.say(user.id,this.defaultMessages.selectMenuOption);
 
-                await this.say(user.id,`${this.defaultMessages.initialMenu}${this.defaultMessages.styleList}${this.defaultMessages.globalConfigs}`);
+                await this.say(user.id,`Escolha a opção desejada ou digite "C" para acessar o carrinho\n1 - Pesquisar Produto(s)`);
 
                 return
 
@@ -473,7 +473,7 @@ class Econobot {
 
                     await this.say(user.id,this.defaultMessages.selectMenuOption);
 
-                    await this.say(user.id,`${this.defaultMessages.initialMenu}${this.defaultMessages.styleList}${this.defaultMessages.globalConfigs}`);
+                    await this.say(user.id,`Escolha a opção desejada ou digite "C" para acessar o carrinho\n1 - Pesquisar Produto(s)`);
 
                 },
 
@@ -489,7 +489,7 @@ class Econobot {
 
                             userStateInMemoryRepository.setState(user.id,"SEARCH_PRODUCT")
 
-                            await this.say(user.id,`Pesquise por algum produto.${this.defaultMessages.styleList}${this.defaultMessages.globalConfigs}`);
+                            await this.say(user.id,`Escolha a opção desejada ou digite "C" para acessar o carrinho\n1 - Pesquisar Produto(s)`);
 
                         },
 
@@ -641,7 +641,7 @@ class Econobot {
 
                     await this.say(user.id,`${message.body}X quantidade(s) de "${selected_item.Descricao}" adicionado(s) ao carrinho.`);
 
-                    await this.say(user.id,`Digite o nome do próximo produto desejado.${this.defaultMessages.styleList}${this.defaultMessages.globalConfigs}`);
+                    await this.say(user.id,`Digite o nome do próximo produto desejado ou digite "C" para acessar o carrinho`);
 
 
                 },
