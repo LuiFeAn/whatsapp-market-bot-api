@@ -113,13 +113,16 @@ class Econobot {
 
         try {
 
-            const user = await userRepository.findOne({
-                id: message.from
-            });
 
-            const [ userInfos ]= await userInfosRepository.findOne({
-                userId: message.from
-            });
+            const [ user, userInfos ] = await Promise.all([
+                userRepository.findOne({
+                    id: message.from
+                }),
+                userInfosRepository.findOne({
+                    userId: message.from
+                })
+
+            ]);
 
             const lowerMessage = message.body.toLowerCase();
 
