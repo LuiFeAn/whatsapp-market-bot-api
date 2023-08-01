@@ -7,19 +7,21 @@ class GoogleMapsService {
     constructor(){
 
         this.api =  axios.create({
-            baseUrl:`https://maps.googleapis.com/maps/api/geocode/json`,
-            headers:{
-                'Authorization':'AIzaSyBgfNvWwvFWG7hvaSQ7bcxqw0Itf88eYk8'
-            }
+            baseURL:`https://maps.googleapis.com/maps/api/geocode`,
         });
 
     }
 
     async getLocation(location){
 
-        const response = await this.api.get(`/address=${location}&key=AIzaSyBgfNvWwvFWG7hvaSQ7bcxqw0Itf88eYk8`);
+        const uri = encodeURIComponent(location);
+        
+        const response = await this.api.get(`/json?address=${uri}&key=AIzaSyBgfNvWwvFWG7hvaSQ7bcxqw0Itf88eYk8`);
 
-        console.log(response);
+        const { data:{ results } } = response;
+
+        return results[0]
+
 
     }
 

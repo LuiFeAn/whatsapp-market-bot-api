@@ -35,6 +35,7 @@ const clearMemoryService = require("../services/clearMemoryService");
 const cartService = require("../services/userCartService");
 const cartItemsService = require("../services/cartItemsService");
 const deliveryFeeService = require('../services/deliveryFeeService');
+const googleMapsService = require("../services/googleMaps");
 
 const validIndex = require("../utils/validIndex");
 const validOptions = require("../utils/validOptions");
@@ -245,7 +246,7 @@ class Econobot {
 
 
             if(['c','carrinho'].includes(lowerMessage) 
-                && ['CHOOSE_MENU_OPTION','CHOOSE_ITEM','SELECT_PRODUCT_QUANTY','SEARCH_PRODUCT','CONFIRM_DELIVERY_METHOD','EXCHANGED_OPTIONS','DEMAND_CONFIRMATION'].includes(userState.current_state)){
+                && ['CHOOSE_MENU_OPTION','CHOOSE_ITEM','SELECT_PRODUCT_QUANTY','SEARCH_PRODUCT','CONFIRM_DELIVERY_METHOD','EXCHANGED_OPTIONS','DEMAND_CONFIRMATION','DEMAND_OBSERVATION'].includes(userState.current_state)){
 
 
                 if( !cart ){
@@ -437,13 +438,13 @@ class Econobot {
                         userInfosRepository.updateComplement(user.id,complemento)
                     ]
 
-                    userStateInMemoryRepository.setState(user.id,"SEND_GEO_LOCATION");    
+                    userStateInMemoryRepository.setState(user.id,"PAYMENT_OPTIONS");    
 
                     await this.say(user.id,`${user.nome_completo}, obrigado por atualizar seu endereço ! 😁`);
 
-                    await this.say(user.id,`${user.nome_completo}, me envie sua localização atual para que eu possa calcular o frete !`);
+                    const { totalShoppingCart } = await cartItemsService.calcItems(cart.id);
 
-                
+                    await this.say(user.id,`Escolha a forma de pagamento desejada:\nTotal do pedido: ${toBRL(totalShoppingCart)}\n\n1 - Dinheiro\n2 - Cartão\n3- PIX`);
                     
                     
                 },
@@ -473,7 +474,7 @@ class Econobot {
 
                     await this.say(user.id,this.defaultMessages.selectMenuOption);
 
-                    await this.say(user.id,`Pesquise por algum produto ou digite "C" para acessar o carrinho\n1 - Pesquisar Produto(s)`);
+                    await this.say(user.id,`Pesquise por algum produto ou digite "C" para acessar o carrinho`);
 
                 },
 
@@ -966,8 +967,25 @@ class Econobot {
 
                 },
 
+                "LOCALIZATION_LIMIT": async () => {
+
+                    await this.say(`${user.nome_completo}, infelizmente ainda entregamos em sua localização no momento.`);
+
+                },
+
                 "DEMAND_OBSERVATION": async () => {
 
+                    const localization = await googleMapsService.getLocation(userInfos.endereco);
+
+                    if( !localization ){
+
+                        await this.say(user.id,"Infelizmente não pude encontrar sua localização para aplicar a taxa de entrega. Por gentileza, atualize seu endereço.");
+
+                        return
+
+                    }
+
+                    userStateInMemoryRepository.setState(user.id,"DEMAND_CONFIRMATION");
 
                     if( lowerMessage != "n" ){
 
@@ -975,7 +993,45 @@ class Econobot {
 
                     }
 
-                    userStateInMemoryRepository.setState(user.id,"DEMAND_CONFIRMATION");
+                    const { formatted_address, geometry } = localization;
+
+                    const { lat, lng } = geometry.location;
+
+                    const econoComprasLocation = {
+                        latitude: -7.214535, 
+                        longitude: -35.856197
+                    }
+        
+                    const userLocation = {
+                        latitude: lat,
+                        longitude: lng
+                    };
+        
+                    const distance = getDistance(econoComprasLocation,userLocation);
+
+                    const km = convertDistance(distance,'km').toFixed(1);
+
+                    const [ delivery ] = await deliveryFeeService.find();
+
+                    const { km_maximo: kmMaximo, km_frete: kmFrete, taxa } = delivery;
+
+                    const kmRest = (kmMaximo - kmFrete) - 0.1
+
+                    if( km >= kmMaximo ){
+
+                        userStateInMemoryRepository.setState(user.id,"LOCALIZATION_LIMIT");
+
+                        await this.say(user.id,"Lamento, mas no momento não efetuamos entregas para a sua localização 😥.\nDigite *C* para acessar seu carrinho");
+
+                        return
+
+                    }
+
+                    if( km >= kmFrete && km < kmRest ){
+
+                        userData.delivery_fee = true;
+
+                    }
 
                     const shoppingList = await cartItemsService.getStatus(cart.id);
 
@@ -986,7 +1042,7 @@ class Econobot {
                     const verifyMethod = userData.delivery_fee;
 
                     const demandTotal =  verifyMethod ?
-                     totalShoppingCart : totalShoppingCart + userData.delivery_fee;
+                     totalShoppingCart : totalShoppingCart + taxa;
 
                     userData.demand_total = demandTotal;
             
@@ -1145,11 +1201,13 @@ class Econobot {
 
                     }
 
-                    userStateInMemoryRepository.setState(user.id,"SEND_GEO_LOCATION");
+                    userStateInMemoryRepository.setState(user.id,"PAYMENT_OPTIONS");
 
                     await this.say(user.id,'Perfeito ! obrigado por confirmar seu endereço 😍');
 
-                    await this.say(user.id,`${user.nome_completo}, me envie sua localização atual para que eu possa calcular o frete !`);
+                    const { totalShoppingCart } = await cartItemsService.calcItems(cart.id);
+
+                    await this.say(user.id,`Escolha a forma de pagamento desejada:\nTotal do pedido: ${toBRL(totalShoppingCart)}\n\n1 - Dinheiro\n2 - Cartão\n3- PIX`);
 
                 },
 
@@ -1193,62 +1251,6 @@ class Econobot {
                     }`);
 
                 },
-
-                "SEND_GEO_LOCATION": async () => {
-
-                    if( !validOptions(['location'], message.type )){
-
-                        await this.say(user.id,`${user.nome_completo}, por gentileza, envie sua localização.`);
-
-                        return
-
-                    }
-
-                    const econoComprasLocation = {
-                        latitude: -7.214535, 
-                        longitude: -35.856197
-                    }
-        
-                    const { description, ...rest } = message.location;
-        
-                    const userLocation = rest;
-        
-                    const distancia = getDistance(econoComprasLocation,userLocation);
-
-                    const km = convertDistance(distancia,'km').toFixed(1);
-
-                    const [ delivery ] = await deliveryFeeService.find();
-
-                    const { km_maximo: kmMaximo, km_frete: kmFrete, taxa } = delivery;
-
-                    const kmRest = (kmMaximo - kmFrete) - 0.1
-
-                    if( km >= kmMaximo ){
-
-                        await this.say(user.id,"Lamento, mas no momento não efetuamos entregas para a sua localização 😥");
-
-                        return
-
-                    }
-
-                    if( km >= kmFrete && km < kmRest ){
-
-                        await this.say(user.id,`Obrigado, ${user.nome_completo} ! a sua taxa de entreg será de ${toBRL(taxa)}`);
-
-                        userData.delivery_fee = taxa;
-
-                    }
-
-                    userStateInMemoryRepository.setState(user.id,"PAYMENT_OPTIONS");
-
-                    const { totalShoppingCart } = await cartItemsService.calcItems(cart.id);
-
-
-                    await this.say(user.id,`Escolha a forma de pagamento desejada:\nTotal do pedido: ${toBRL(totalShoppingCart)}\n\n1 - Dinheiro\n2 - Cartão\n3- PIX`);
-
-
-                }
-
                 
 
             }
