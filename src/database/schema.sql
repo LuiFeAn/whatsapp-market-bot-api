@@ -74,14 +74,22 @@ CREATE TABLE pedidos(
 CREATE TABLE taxa_entrega(
 
     id INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    km_maximo INT(10) NOT NULL,
-    km_frete INT(10) NOT NULL,
-    taxa  DECIMAL(10,2) NOT NULL
+    usuario_id VARCHAR(30) NOT NULL,
+    taxa  DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(usuario_id) ON UPDATE CASCADE ON DELETE CASCADE
 
 );
 
-INSERT INTO taxa_entrega VALUES(NULL,7,5,5.00);
 
+DELIMITER //
+CREATE TRIGGER tr_adicionar_frete
+AFTER INSERT ON usuarios
+FOR EACH ROW
+BEGIN
+    INSERT INTO taxa_entrega VALUES (NULL, NEW.id, 5);
+END;
+//
+DELIMITER ;
 
 
 
