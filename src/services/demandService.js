@@ -4,19 +4,21 @@ const bot = require("../index");
 
 class DemandService {
 
-    getAllDemands(){
+    async getAll({ userId }){
 
-        const demands = demandRepository.findAll();
+        let demands = [];
 
-        return demands;
+        if( userId ){
 
-    }
+            demands = await demandRepository.findAllFromUser(userId);
 
-    getDemand(demandId){
+            return demands;
 
-        const demand = demandRepository.findOne(demandId);
+        }
 
-        return demand;
+        demands = await demandRepository.findAll();
+
+        return demands
 
     }
 

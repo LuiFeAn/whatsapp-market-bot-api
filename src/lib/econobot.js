@@ -12,11 +12,8 @@ const { MessageMedia } = require("whatsapp-web.js");
 
 env.config();
 
-const shoppingCartService = require("../services/shoppingCartService");
-
 //Repositórios
 
-const shoppingCartRepository = require('../repositories/shoppingCartRepository');
 const userInfosRepository = require('../repositories/userInfosRepository');
 const botBusyRepository = require('../repositories/inMemory/botBusyInMemoryRepository');
 const userRepository = require('../repositories/userRepository');
@@ -35,7 +32,7 @@ const clearMemoryService = require("../services/clearMemoryService");
 const cartService = require("../services/userCartService");
 const cartItemsService = require("../services/cartItemsService");
 const deliveryFeeService = require('../services/deliveryFeeService');
-const googleMapsService = require("../services/googleMaps");
+const demandService = require('../services/demandService');
 
 const validIndex = require("../utils/validIndex");
 const validOptions = require("../utils/validOptions");
@@ -131,6 +128,8 @@ class Econobot {
 
             const userData = userDataInMemoryRepository.getUserData(message.from); 
 
+            console.log(user);
+
             if( botBusyRepository.findBussy( message.from) ) return
 
             if( !user ){
@@ -170,6 +169,8 @@ class Econobot {
                             id: message.from,
                             nome_completo: message.body
                         });
+
+                        delete userData.currentState;
 
                         userStateInMemoryRepository.setState(message.from,'WAITING_MESSAGE_NUMBER');
 
@@ -975,61 +976,9 @@ class Econobot {
 
                 "DEMAND_OBSERVATION": async () => {
 
-                    const localization = await googleMapsService.getLocation(userInfos.endereco);
-
-                    if( !localization ){
-
-                        await this.say(user.id,"Infelizmente não pude encontrar sua localização para aplicar a taxa de entrega. Por gentileza, atualize seu endereço.");
-
-                        return
-
-                    }
-
-                    userStateInMemoryRepository.setState(user.id,"DEMAND_CONFIRMATION");
-
                     if( lowerMessage != "n" ){
 
                         userData.observation = message.body;
-
-                    }
-
-                    const { formatted_address, geometry } = localization;
-
-                    const { lat, lng } = geometry.location;
-
-                    const econoComprasLocation = {
-                        latitude: -7.214535, 
-                        longitude: -35.856197
-                    }
-        
-                    const userLocation = {
-                        latitude: lat,
-                        longitude: lng
-                    };
-        
-                    const distance = getDistance(econoComprasLocation,userLocation);
-
-                    const km = convertDistance(distance,'km').toFixed(1);
-
-                    const [ delivery ] = await deliveryFeeService.find();
-
-                    const { km_maximo: kmMaximo, km_frete: kmFrete, taxa } = delivery;
-
-                    const kmRest = (kmMaximo - kmFrete) - 0.1
-
-                    if( km >= kmMaximo ){
-
-                        userStateInMemoryRepository.setState(user.id,"LOCALIZATION_LIMIT");
-
-                        await this.say(user.id,"Lamento, mas no momento não efetuamos entregas para a sua localização 😥.\nDigite *C* para acessar seu carrinho");
-
-                        return
-
-                    }
-
-                    if( km >= kmFrete && km < kmRest ){
-
-                        userData.delivery_fee = true;
 
                     }
 
@@ -1037,18 +986,61 @@ class Econobot {
 
                     const { totalShoppingCart } = await cartItemsService.calcItems(cart.id);
 
+                    const demands = await demandService.getAll({
+                        userId: user.id,
+                    });
+
+                    if( demands.length === 0 ){
+
+                        if( totalShoppingCart < 100 ){
+
+                            userStateInMemoryRepository.setState(user.id,"FIRST_BUY_PROMOTION");
+
+                            await this.say(user.id,`${user.nome_completo}, faltam apenas ${ toBRL(totalShoppingCart - 100) } para conseguir taxa de entrega grátis no seu primeiro pedido ! quer participar dessa promoção ?\n\n1 - Okay, quero participar\n2 - Não, obrigado`);
+    
+                            return
+
+                        }
+
+                        await this.say(user.id,`${user.nome_completo}, parabéns ! você ultrapassou ${toBRL(100)} em compras no seu primeiro pedido e acaba de ganhar *taxa de entrega grátis* 😉`);
+
+                    }
+
+                    userStateInMemoryRepository.setState(user.id,"DEMAND_CONFIRMATION");
+
                     const date = currentDate();
 
-                    const verifyMethod = userData.delivery_fee;
+                    const verifyMethod = totalShoppingCart > 100;
 
-                    const demandTotal =  verifyMethod ?
-                     totalShoppingCart : totalShoppingCart + taxa;
+                    const demandTotal =  verifyMethod ? totalShoppingCart : totalShoppingCart + userFee.taxa;
 
                     userData.demand_total = demandTotal;
             
-                    const demandStatus = `*Confirme se seu pedido está correto e escolha finalizar 👇*\n\n*Horário: ${date}*\n*Cliente: ${user.nome_completo}*\n*Celular: ${user.numero_telefone}*\n*Entrega: ${userData.delivery_method}*\n*Endereço: ${user.endereco}*\n\n------------------------------\n\n${shoppingList}\n\n------------------------------\n\n*Taxa de entrega: ${userData.delivery_method === 'BUSCAR NA LOJA' ? 'N/A*' : 'R$ 5,00 R$*'}\n*Total: ${verifyMethod ? '' : '( Carrinho + Taxa de Entrega )'} ${toBRL(demandTotal)}*\n*Pagamento: ${userData.payment_method}*\n*Troco para: ${ userData?.exchange_value ? toBRL(userData.exchange_value) : 'N/A' }*\n*Observação: ${userData?.observation ? userData.observation + "*" : "N/A*"}\n*Obrigado!*\n\n------------------------------\n\nF - Finalizar\nC - Carrinho`
+                    const demandStatus = `*Confirme se seu pedido está correto e escolha finalizar 👇*\n\n*Horário: ${date}*\n*Cliente: ${user.nome_completo}*\n*Celular: ${userInfos.numero_telefone}*\n*Entrega: ${userData.delivery_method}*\n*Endereço: ${userInfos.endereco}*\n\n------------------------------\n\n${shoppingList}\n\n------------------------------\n\n*Taxa de entrega: ${userData.delivery_method === 'BUSCAR NA LOJA' ? 'N/A*' : verifyMethod ? 'Grátis*' : toBRL(userFee.taxa)}\n*Total: ${verifyMethod ? '' : '( Carrinho + Taxa de Entrega )'} ${toBRL(demandTotal)}*\n*Pagamento: ${userData.payment_method}*\n*Troco para: ${ userData?.exchange_value ? toBRL(userData.exchange_value) : 'N/A' }*\n*Observação: ${userData?.observation ? userData.observation + "*" : "N/A*"}\n*Obrigado!*\n\n------------------------------\n\nF - Finalizar\nC - Carrinho`
 
                     await this.say(user.id,demandStatus);
+
+                },
+
+                "FIRST_BUY_PROMOTION": async () => {
+
+                    if( !validOptions(['1','2'], lowerMessage) ){
+
+                        await this.say(user.id,"Não entendi o que você quis dizer.Deseja adicionar mais itens ao seu carrinho para participar da promoção e obter taxa de entrega grátis ?\n\n1 - Okay, irei adicionar\n2 - Não, obrigado");
+
+                        return
+
+                    }
+
+                    if( lowerMessage === '2' ){
+
+                        return
+
+                    }
+
+                    userStateInMemoryRepository.setState(user.id,"SEARCH_PRODUCT");
+
+                    await this.say(user.id,"Por favor, pesquise por mais algum produto...");
 
                 },
 
@@ -1233,7 +1225,7 @@ class Econobot {
 
                         userStateInMemoryRepository.setState(user.id,"CONFIRM_ADRESS")
 
-                        await this.say(user.id,`${user.nome_completo}, você confirma seu endereço para entrega ?\n\nEndereço: ${user.endereco}\nBairro: ${userInfos.bairro}\nNúmero da residência: ${userInfos.numero_casa}\nComplemento: ${userInfos.complemento}\n\nS - Sim, confirmo\nN - Não, está incorreto`);
+                        await this.say(user.id,`${user.nome_completo}, você confirma seu endereço para entrega ?\n\nEndereço: ${userInfos.endereco}\nBairro: ${userInfos.bairro}\nNúmero da residência: ${userInfos.numero_casa}\nComplemento: ${userInfos.complemento}\n\nS - Sim, confirmo\nN - Não, está incorreto`);
 
                         return
 

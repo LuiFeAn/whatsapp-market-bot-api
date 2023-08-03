@@ -3,11 +3,11 @@ const query = require('../database/mysql-async');
 class UserRepository {
 
 
-    async findOne({numero_telefone,id}){
+    async findOne({ id }){
 
         const [ result ] = await query('ECONOBOT',{
-            query:`SELECT * FROM usuarios`,
-            values: [ numero_telefone, id ]
+            query:`SELECT * FROM usuarios WHERE id = ?`,
+            values: [id]
         });
 
         return result;

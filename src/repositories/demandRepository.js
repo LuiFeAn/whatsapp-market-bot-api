@@ -7,24 +7,24 @@ class DemandRepository {
     constructor(){
 
         this.commonSelectQuery = `
-        SELECT
-        usuarios.id as usuario_id, 
-        usuarios.nome_completo,
-        usuario_informacoes.numero_telefone,
-        usuario_informacoes.endereco,
-        pedidos.metodo_entrega,
-        pedidos.metodo_pagamento,
-        pedidos.observacao,
-        pedidos.horario,
-        pedidos.total,
-        pedidos.troco
-        FROM pedidos
-        JOIN carrinhos
-        ON carrinhos.id = pedidos.carrinho_id
-        JOIN usuarios 
-        ON usuarios.id = carrinhos.usuario_id
-        JOIN usuario_informacoes 
-        ON usuario_informacoes.usuario_id = usuarios.id
+            SELECT
+            usuarios.id as usuario_id, 
+            usuarios.nome_completo,
+            usuario_informacoes.numero_telefone,
+            usuario_informacoes.endereco,
+            pedidos.metodo_entrega,
+            pedidos.metodo_pagamento,
+            pedidos.observacao,
+            pedidos.horario,
+            pedidos.total,
+            pedidos.troco
+            FROM pedidos
+            JOIN carrinhos
+            ON carrinhos.id = pedidos.carrinho_id
+            JOIN usuarios 
+            ON usuarios.id = carrinhos.usuario_id
+            JOIN usuario_informacoes 
+            ON usuario_informacoes.usuario_id = carrinhos.usuario_id
         `
 
     }
@@ -38,10 +38,19 @@ class DemandRepository {
 
     }
 
+    findAllFromUser(userId){
+
+        return query('ECONOBOT',{
+            query: `${this.commonSelectQuery} WHERE carrinhos.usuario_id = ?`,
+            values:[userId]
+        });
+
+    }
+
     findAll(){
 
         return query('ECONOBOT',{
-            query: this.commonSelectQuery,
+            query: `${this.commonSelectQuery}`,
             values:[]
         });
 
@@ -50,8 +59,8 @@ class DemandRepository {
     findOne(demandId){
 
         return query('ECONOBOT',{
-            query: `${this.commonSelectQuery} WHERE id = ?`,
-            values:[demandId]
+            query: `${this.commonSelectQuery} WHERE id = ? OR carrinho_id = ?`,
+            values:[demandId,cartId]
         });
 
     }
