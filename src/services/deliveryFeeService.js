@@ -3,9 +3,11 @@ const deliveryFeeRepository = require('../repositories/deliveryFeeRepository');
 
 class DeliveryFeeService {
 
-    find(){
+    async findOne(userId){
 
-        return deliveryFeeRepository.findAll();
+        const [ deliveryFee ] = await deliveryFeeRepository.findOne(userId);
+
+        return deliveryFee;
 
     }
 
