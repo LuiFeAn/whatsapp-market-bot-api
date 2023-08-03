@@ -6,21 +6,7 @@ class UserRepository {
     async findOne({numero_telefone,id}){
 
         const [ result ] = await query('ECONOBOT',{
-            query:`
-
-                SELECT 
-                usuarios.*,
-                usuario_informacoes.numero_telefone,
-                usuario_informacoes.endereco,
-                usuario_informacoes.bairro,
-                usuario_informacoes.numero_casa,
-                usuario_informacoes.complemento
-                FROM usuarios
-                LEFT JOIN usuario_informacoes
-                ON usuario_informacoes.usuario_id = usuarios.id
-
-
-            `,
+            query:`SELECT * FROM usuarios`,
             values: [ numero_telefone, id ]
         });
 
