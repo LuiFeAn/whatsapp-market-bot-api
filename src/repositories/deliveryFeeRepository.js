@@ -13,6 +13,15 @@ class DeliveryFeeRepository {
 
     }
 
+    findOne(userId){
+
+        return query('ECONOBOT',{
+            query:'SELECT * FROM taxa_entrega WHERE usuario_id = ?',
+            values:[userId]
+        })
+
+    }
+
     create({ kmMaximo, kmFrete, taxa }){
 
         return query('ECONOBOT',{
