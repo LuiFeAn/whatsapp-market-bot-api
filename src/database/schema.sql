@@ -91,6 +91,13 @@ END;
 //
 DELIMITER ;
 
+CREATE TABLE aceita_promocoes(
+
+   id INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+   usuario_id VARCHAR(30) NOT NULL,
+   CONSTRAINT fk_usuario_promocoes FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE ON UPDATE CASCADE
+
+);
 
 
 
