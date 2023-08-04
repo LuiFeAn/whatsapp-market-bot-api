@@ -192,6 +192,10 @@ class Econobot {
                 userId: user.id
             });
 
+            const demands = await demandService.getAll({
+                userId: user.id,
+            });
+
             user.nome_completo = onliFirstName(user.nome_completo);
 
             if( !userState ){
@@ -770,10 +774,6 @@ class Econobot {
                             const verification = await verifyCart();
 
                             if( !verification ) return;
-
-                            const demands = await demandService.getAll({
-                                userId: user.id,
-                            });
 
                             if( demands.length === 0 ){
 
