@@ -39,6 +39,12 @@ class UserLastMessageInMemoryRepository {
 
     }
 
+    delete(id){
+
+        this.usersLastMessages = this.usersLastMessages.filter( item => item.id != id );
+
+    }
+
 
 }
 

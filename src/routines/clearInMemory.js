@@ -26,6 +26,8 @@ function checkLastMessages() {
 
         clearMemoryService.clearUserLastProductAndList(message.id);
 
+        userLastMessageInMemory.delete(message.id);
+
         await bot.say(message.id, 'Encerrei seu atendimento por falta de interação, mas sinta-se à vontade para enviar mensagem a qualquer momento 😉');
 
       }
