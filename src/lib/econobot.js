@@ -33,6 +33,7 @@ const cartService = require("../services/userCartService");
 const cartItemsService = require("../services/cartItemsService");
 const deliveryFeeService = require('../services/deliveryFeeService');
 const demandService = require('../services/demandService');
+const userPromotionService = require('../services/userPromotionService');
 
 const validIndex = require("../utils/validIndex");
 const validOptions = require("../utils/validOptions");
@@ -235,7 +236,7 @@ class Econobot {
 
                 await this.say(user.id,this.defaultMessages.selectMenuOption);
 
-                await this.say(user.id,`Escolha a opção desejada ou digite "C" para acessar o carrinho\n1 - Pesquisar Produto(s)`);
+                await this.say(user.id,`*Escolha a opção desejada* ou digite *"C"* para acessar o carrinho\n1 - Pesquisar Produto(s)`);
 
                 return
 
@@ -310,7 +311,7 @@ class Econobot {
     
                     await message.reply('Show !')
     
-                    await this.say(message.from,'Agora me informe seu endereço 📬');
+                    await this.say(user.id,'Agora me informe seu endereço 📬');
 
     
                 },
@@ -319,7 +320,7 @@ class Econobot {
     
                     if( message.body.length >= 100 ){
 
-                        await this.say(message.from,'Por gentileza, me informe um endereço válido');
+                        await this.say(user.id,'Por gentileza, me informe um endereço válido');
 
                         return
 
@@ -329,7 +330,7 @@ class Econobot {
 
                     userData.endereco = message.body;
 
-                    await this.say(message.from,'Agora, por gentileza, me informe seu bairro.');
+                    await this.say(user.id,'Agora, por gentileza, me informe seu bairro.');
                     
 
                 },
@@ -348,7 +349,7 @@ class Econobot {
 
                     userData.bairro = message.body;
 
-                    await this.say(message.from,'Agora, por gentileza, me informe o número da sua residência');
+                    await this.say(user.id,'Agora, por gentileza, me informe o número da sua residência');
 
 
                 },
@@ -368,7 +369,7 @@ class Econobot {
 
                     userData.numero_casa = message.body;
 
-                    await this.say(message.from,'E por último, mas não menos importante: Adicione um complemento para facilitar a localização de sua residência !')
+                    await this.say(user.id,'E por último, mas não menos importante: Adicione um complemento para facilitar a localização de sua residência !')
 
 
                 },
@@ -395,37 +396,14 @@ class Econobot {
 
                     };
 
-                    const { endereco, numero_telefone, bairro, numero_casa, complemento  } = userData;
+                    const { endereco, bairro, numero_casa, complemento  } = userData;
 
                     if( !userInfos ){
-
-                        try{
-
-                            await userInfosRepository.insertInfos({
-                                usuario_id: user.id,
-                                endereco,
-                                numero_telefone,
-                                bairro,
-                                numero_casa,
-                                complemento
-                            })
-    
-                        }catch(err){
-    
-                            await this.say(user.id,'Não foi possível concluir seu cadastro. Tente novamente mais tarde');
-    
-                            return
-    
-                        }
-
-                        userDataInMemoryRepository.removeUserData(user.id);
                     
-                        userStateInMemoryRepository.setState(user.id,"CHOOSE_MENU_OPTION");
-        
-                        await this.say(message.from,'Perfeito ! seu cadastro está completo 😎😆');
-    
-                        await this.say(message.from,`${this.defaultMessages.selectMenuOption}\n${this.defaultMessages.initialMenu}`);
+                        userStateInMemoryRepository.setState(user.id,"CONFIRM_PROMOTIONS");
 
+                        await this.say(user.id,`${user.nome_completo}, quer receber nossas promoções e novidades em primeira mão aqui pelo Whatsapp ?\n1 - Sim, desejo\n2 - Não, obrigado`);
+    
                         return
 
                     }
@@ -446,6 +424,57 @@ class Econobot {
                     await this.say(user.id,`Escolha a forma de pagamento desejada:\nTotal do pedido: ${toBRL(totalShoppingCart)}\n\n1 - Dinheiro\n2 - Cartão\n3- PIX`);
                     
                     
+                },
+
+                "CONFIRM_PROMOTIONS": async () => {
+
+                    if( !validOptions(['1','2'],lowerMessage) ){
+
+                        await message.reply('Desculpe, não entendi o que você quis dizer !\nDeseja receber nossas promoções e novidades em primeira mão aqui pelo Whatsapp ?\n1 - Sim, desejo\n2 - Não, obrigado');
+
+                        return
+
+                    }
+
+                    if( lowerMessage === '1' ){
+
+                        await userPromotionService.acceptPromotion(user.id);
+
+                        await this.say(user.id,`Obrigado ! você irá receber todas as nossas futuras promoções aqui pelo zap 😉`);
+
+                    }
+
+                    const { endereco, numero_telefone, bairro, numero_casa, complemento  } = userData;
+
+                    try{
+
+                        await userInfosRepository.insertInfos({
+                            usuario_id: user.id,
+                            endereco,
+                            numero_telefone,
+                            bairro,
+                            numero_casa,
+                            complemento
+                        });
+
+                        userDataInMemoryRepository.removeUserData(user.id);
+
+                        userStateInMemoryRepository.setState(user.id,"CHOOSE_MENU_OPTION")
+
+                        await this.say(user.id,`${user.nome_completo}, Seu cadastro está completo 😎😆`);
+
+                        await this.say(user.id,`${this.defaultMessages.selectMenuOption}\n${this.defaultMessages.initialMenu}`);
+
+
+                    }catch(err){
+
+                        await this.say(user.id,'Não foi possível concluir seu cadastro. Tente novamente mais tarde');
+
+                        return
+
+                    }
+
+
                 },
 
                 "DEMAND_ALREADY_EXISTS_OPTIONS": async () => {
@@ -473,7 +502,7 @@ class Econobot {
 
                     await this.say(user.id,this.defaultMessages.selectMenuOption);
 
-                    await this.say(user.id,`Pesquise por algum produto ou digite "C" para acessar o carrinho`);
+                    await this.say(user.id,`*Pesquise por algum produto* ou digite *"C"* para acessar o carrinho`);
 
                 },
 
@@ -489,7 +518,7 @@ class Econobot {
 
                             userStateInMemoryRepository.setState(user.id,"SEARCH_PRODUCT")
 
-                            await this.say(user.id,`Escolha a opção desejada ou digite "C" para acessar o carrinho\n1 - Pesquisar Produto(s)`);
+                            await this.say(user.id,`*Pesquise por algum produto* ou digite *"C"* para acessar o carrinho`);
 
                         },
 
@@ -659,9 +688,11 @@ class Econobot {
 
                         }
 
+                        await this.say(user.id,`*Faltam apenas mais ${toBRL( 100 - totalShoppingCart )} para entrega grátis !*`);
+
                     }
 
-                    await this.say(user.id,`Digite o nome do próximo produto desejado ou digite "C" para acessar o carrinho`);
+                    await this.say(user.id,`*Digite o nome do próximo produto desejado* ou digite *"C"* para acessar o carrinho`);
 
 
                 },
@@ -1090,6 +1121,8 @@ class Econobot {
                     }
 
                     userData.exchange_value = exchange;
+
+                    userStateInMemoryRepository.setState(user.id,"DEMAND_OBSERVATION");
 
                     await this.say(user.id,`Perfeito. Troco para ${toBRL(exchange)}`);
 
