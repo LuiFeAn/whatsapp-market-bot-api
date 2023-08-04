@@ -2,11 +2,15 @@ const cartRepository = require("../repositories/cartRepository");
 
 class CartService {
 
-    async createCart(userId){
+    async getCarts(userId){
 
-        const cart = await this.getCart({
-            userId
-        });
+        const carts = await cartRepository.findAll(userId);
+
+        return carts;
+
+    }
+
+    async createCart(userId){
 
         return cartRepository.create(userId);
 
@@ -17,16 +21,24 @@ class CartService {
         return cartRepository.remove(cart_id);
 
     }
+
+
+    async partialUpdate(userId,{ cartStatus }){
+
+        if( cartStatus ){
+
+            await cartRepository.updateStatus(userId,cartStatus);
+
+        }
+
+    }
     
 
-    async getCart({ userId,cartId }){
+    async getLastCart(userId){
 
-        const [ cart ] = await cartRepository.findOne({
-            cartId,
-            userId
-        });
+        const lastCart = await this.getCarts(userId);
 
-        return cart;
+        return lastCart[ lastCart.length - 1 ];
 
     }
 

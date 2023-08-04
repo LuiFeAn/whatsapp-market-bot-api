@@ -20,6 +20,15 @@ class CartRepository {
 
     }
 
+    findAll(userId){
+
+        return query('ECONOBOT',{
+            query:'SELECT * FROM carrinhos WHERE usuario_id = ? ORDER BY id ASC',
+            values:[userId]
+        })
+
+    }
+
     remove(cart_id){
 
         return query("ECONOBOT",{
@@ -27,6 +36,15 @@ class CartRepository {
             values:[cart_id]
         });
 
+
+    }
+
+    updateStatus(userId,status){
+
+        return query('ECONOBOT',{
+            query:'UPDATE carrinhos SET status = ? WHERE usuario_id = ?',
+            values:[status,userId]
+        })
 
     }
 

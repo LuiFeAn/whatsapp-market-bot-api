@@ -22,6 +22,8 @@ function checkLastMessages() {
 
       if (timeDifferenceMinutes >= 3) {
 
+        userStateInMemoryRepository.removeState(message.id);
+
         clearMemoryService.clearUserLastProductAndList(message.id);
 
         await bot.say(message.id, 'Encerrei seu atendimento por falta de interação, mas sinta-se à vontade para enviar mensagem a qualquer momento 😉');

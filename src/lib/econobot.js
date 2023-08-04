@@ -60,7 +60,7 @@ class Econobot {
 
         this.defaultMessages = {
             selectMenuOption:`*A cada etapa algumas opções serão apresentadas para você, e basta você responder com o número ou a letra da a opção desejada*`,
-            initialMenu:'*Escolha a opção desejada*\n\n1 - Fazer pedido',
+            initialMenu:'\n*Escolha a opção desejada* ou digite *C* para acessar o carrinho\n\n1 - Fazer pedido',
             menuCheckout:"*O que deseja fazer ? digite a opção desejada.*\n\n1 - Pesquisar novo(s) produto(s)\n2 - Deletar Produto\n3 - Alterar quantidade de produto\n4 - Limpar carrinho\n5 - Finalizar pedido\n6 - Finalizar atendimento",
             paymentMenu:"",
             globalConfigs:"C - Carrinho",
@@ -188,9 +188,7 @@ class Econobot {
 
             const userState = userStateInMemoryRepository.getState(user.id);
 
-            const cart = await cartService.getCart({
-                userId: user.id
-            });
+            const cart = await cartService.getLastCart(user.id);
 
             const demands = await demandService.getAll({
                 userId: user.id,
@@ -218,7 +216,7 @@ class Econobot {
 
                 await this.say(user.id,`Olá, ${user.nome_completo} ! Que bom ver você de novo por aqui 😁`);
 
-                if( cart ){
+                if( cart?.status === 'ABERTO' ){
 
                     const items = await cartItemsService.findItems(cart.id);
 
@@ -234,13 +232,9 @@ class Econobot {
 
                 }
 
-                userStateInMemoryRepository.setState(user.id,"CHOOSE_MENU_OPTION")
-
                 await this.say(user.id,"Como posso ajudar?");
 
-                await this.say(user.id,this.defaultMessages.selectMenuOption);
-
-                await this.say(user.id,`*Escolha a opção desejada* ou digite *"C"* para acessar o carrinho\n1 - Pesquisar Produto(s)`);
+                await this.say(user.id,`${this.defaultMessages.selectMenuOption}\n${this.defaultMessages.initialMenu}`);
 
                 return
 
@@ -258,6 +252,14 @@ class Econobot {
                     userStateInMemoryRepository.setState(user.id,"CHOOSE_MENU_OPTION");
 
                     await this.say(user.id,`Para acessar o menu do carrinho, primeiramente você tem que realizar um pedido !\n1 - Fazer pedido`);
+
+                    return
+
+                }
+
+                if( cart.status === 'ANÁLISE'){
+
+                    await this.say(user.id,`${user.nome_completo}, o seu pedido está em análise. Aguarde, brevemente voltarei com mais informações 😉`);
 
                     return
 
@@ -493,7 +495,7 @@ class Econobot {
 
                     }
 
-                    userStateInMemoryRepository.setState(user.id,"SEARCH_PRODUCT")
+                    userStateInMemoryRepository.setState(user.id,"CHOOSE_MENU_OPTION")
 
                     if( lowerMessage === '2' ){
 
@@ -504,9 +506,7 @@ class Econobot {
                         
                     }
 
-                    await this.say(user.id,this.defaultMessages.selectMenuOption);
-
-                    await this.say(user.id,`*Pesquise por algum produto* ou digite *"C"* para acessar o carrinho`);
+                    await this.say(user.id,`${this.defaultMessages.selectMenuOption}\n${this.defaultMessages.initialMenu}`);
 
                 },
 
@@ -518,11 +518,27 @@ class Econobot {
 
                         '1': async () => {
 
+                            if( cart?.status === 'ABERTO' ){
+
+                                await this.say(user.id,`${user.nome_completo}, você já possui um pedido em aberto !\nSe deseja realizar outro pedido, por gentileza, primeiro finalize este.`);
+
+                                return
+
+                            }
+
+                            if( cart?.status === 'ANÁLISE'){
+
+                                await this.say(user.id,`${user.nome_completo}, você já realizou um pedido anteriormente e ele está em análise.\nPor favor, aguarde a conclusão do pedido para que possa realizar novos.`);
+            
+                                return
+            
+                            }
+
                             await cartService.createCart(user.id);
 
                             userStateInMemoryRepository.setState(user.id,"SEARCH_PRODUCT")
 
-                            await this.say(user.id,`*Pesquise por algum produto* ou digite *"C"* para acessar o carrinho`);
+                            await this.say(user.id,`*Você iniciou um novo pedido. Pesquise por algum produto* ou digite *"C"* para acessar o carrinho`);
 
                         },
 
@@ -1182,6 +1198,10 @@ class Econobot {
                         exchange: userData?.exchange_value,
                         observation: userData?.observation,
                         total: userData.demand_total
+                    });
+
+                    await cartService.partialUpdate(user.id,{
+                        cartStatus:'ANÁLISE'
                     });
 
                     userStateInMemoryRepository.setState(user.id,"FINALLY");
