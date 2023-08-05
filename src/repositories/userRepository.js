@@ -18,7 +18,7 @@ class UserRepository {
 
         return query('ECONOBOT',{
             query:'INSERT INTO usuarios VALUES(?,?)',
-            values:[id,nome_completo]
+            values:[id,nome_completo.toUpperCase()]
         });
 
     }

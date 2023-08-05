@@ -1191,7 +1191,7 @@ class Econobot {
 
                     }
 
-                    await demandRepository.create({
+                    await demandService.createDemand({
                         cartId: cart.id,
                         deliveryMethod: userData.delivery_method,
                         paymentMethod: userData.payment_method,
@@ -1224,7 +1224,7 @@ class Econobot {
 
                     }
 
-                    await demandRepository.create({
+                    await demandService.createDemand({
                         cartId: cart.id,
                         deliveryMethod: userData.delivery_method,
                         paymentMethod: userData.payment_method,

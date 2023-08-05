@@ -56,10 +56,10 @@ class DemandRepository {
 
     }
 
-    findOne(demandId){
+    findOne({ demandId, cartId }){
 
         return query('ECONOBOT',{
-            query: `${this.commonSelectQuery} WHERE id = ? OR carrinho_id = ?`,
+            query: `${this.commonSelectQuery} WHERE pedidos.id = ? OR carrinho_id = ?`,
             values:[demandId,cartId]
         });
 
