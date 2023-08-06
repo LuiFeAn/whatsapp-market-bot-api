@@ -1,3 +1,5 @@
+delete require.cache[require.resolve('../services/demandService')];
+
 const demandRepository = require("../services/demandService");
 
 class DemandController {
