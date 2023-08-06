@@ -1,7 +1,7 @@
 const demandRepository = require("../repositories/demandRepository");
 const clearMemoryService = require("../services/clearMemoryService");
 const clientRepository = require('../repositories/clientsRepository');
-const bot = require("../index");
+const bot = require("../bot");
 
 class DemandService {
 
