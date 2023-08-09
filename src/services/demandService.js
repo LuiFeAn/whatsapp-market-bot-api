@@ -1,25 +1,30 @@
 const demandRepository = require("../repositories/demandRepository");
 const clearMemoryService = require("../services/clearMemoryService");
 const clientRepository = require('../repositories/clientsRepository');
+const moment = require('moment')
 const bot = require("../bot");
 
 class DemandService {
 
-    async getAll({ userId }){
+    async getAll({ userId, type, date, page, quanty }){
 
-        let demands = [];
+        let offset = 0;
 
-        if( userId ){
+        if( page > 1 ){
 
-            demands = await demandRepository.findAllFromUser(userId);
-
-            return demands;
+            offset = (page - 1) * Number(quanty);
 
         }
 
-        demands = await demandRepository.findAll();
+        const demands = await demandRepository.findAll({
+            userId,
+            type,
+            date,
+            quanty,
+            offset
+        });
 
-        return demands
+        return demands;
 
     }
 

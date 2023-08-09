@@ -4,7 +4,11 @@ const demandRoutes = Router();
 
 const demandController = require("../controllers/demandController");
 
-demandRoutes.get('/',demandController.index);
+const demandDto = require('../dtos/demandDto');
+
+const expressValidator = require('../middlewares/expressValidator');
+
+demandRoutes.get('/',demandDto.get,expressValidator,demandController.index);
 
 demandRoutes.patch('/',demandController.partialUpdate);
 

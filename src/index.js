@@ -15,7 +15,7 @@ env.config();
         methods:['GET','POST','PUT','DELETE','PATCH']
     }    
 
-    await bot.initialize();
+    bot.initialize();
 
     const app = express();
 

@@ -12,6 +12,9 @@ class DemandRepository {
             usuarios.nome_completo,
             usuario_informacoes.numero_telefone,
             usuario_informacoes.endereco,
+            usuario_informacoes.bairro,
+            usuario_informacoes.numero_casa,
+            usuario_informacoes.complemento,
             pedidos.metodo_entrega,
             pedidos.metodo_pagamento,
             pedidos.observacao,
@@ -38,23 +41,36 @@ class DemandRepository {
 
     }
 
-    findAllFromUser(userId){
+
+    findAll({ type, userId, date, quanty, offset }){
+
+        const restOfParams = [];
+
+        let restOfQuery = '';
+
+        if( userId ){
+
+            restOfQuery = 'AND carrinhos.usuario_id = ?';
+
+            restOfParams.push(userId);
+
+        }
+
+        if( date ){
+
+            restOfQuery = 'AND DATE(pedidos.horario) = ?';
+
+            restOfParams.push(date)
+
+        }
 
         return query('ECONOBOT',{
-            query: `${this.commonSelectQuery} WHERE carrinhos.usuario_id = ?`,
-            values:[userId]
+            query: `${this.commonSelectQuery} WHERE pedidos.status = ? ${restOfQuery} LIMIT ? OFFSET ? `,
+            values:[type,...restOfParams,quanty,offset]
         });
 
     }
 
-    findAll(){
-
-        return query('ECONOBOT',{
-            query: `${this.commonSelectQuery}`,
-            values:[]
-        });
-
-    }
 
     findOne({ demandId, cartId }){
 
