@@ -1,6 +1,6 @@
 delete require.cache[require.resolve('../services/demandService')];
 
-const demandRepository = require("../services/demandService");
+const demandService = require('../services/demandService');
 
 class DemandController {
 
@@ -8,7 +8,7 @@ class DemandController {
 
         const { usuario_id, tipo, data, quantidade, pagina } = req.query;
 
-        const demands = await demandRepository.getAll({
+        const demands = await demandService.getAll({
             userId: usuario_id,
             type: tipo,
             date: data,
@@ -26,7 +26,7 @@ class DemandController {
 
         const { status } = req.body;
 
-        await demandRepository.partialUpdate({
+        await demandService.partialUpdate({
             id,
             status
         });
