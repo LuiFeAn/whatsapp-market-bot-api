@@ -58,6 +58,15 @@ class UserInfosRepository {
 
     }
 
+    updatePhoneNumber(userId,phoneNumber){
+
+        return query('ECONOBOT',{
+            query:'UPDATE usuario_informacoes SET numero_telefone = ? WHERE usuario_id = ?',
+            values:[phoneNumber,userId]
+        })
+
+    }
+
 
 }
 

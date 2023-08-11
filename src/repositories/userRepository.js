@@ -2,6 +2,28 @@ const query = require('../database/mysql-async');
 
 class UserRepository {
 
+    findAll({ search, quanty, page }){
+
+        let restOfQuery = '';
+
+        const params = [];
+
+        if( search ){
+
+            restOfQuery += 'WHERE nome_completo LIKE ? OR id LIKE ?';
+
+            params.push(`${search}%`);
+            
+            params.push(`${search}%`);
+
+        }
+
+        return query('ECONOBOT',{
+            query:`SELECT * FROM usuarios ${restOfQuery} ORDER BY nome_completo ASC LIMIT ? OFFSET ?`,
+            values:[...params,quanty,page]
+        })
+
+    }
 
     async findOne({ id }){
 
@@ -14,23 +36,33 @@ class UserRepository {
 
     }
 
-    insertUser({ id, nome_completo}){
+    insertUser({ whatsapp_id, nome_completo}){
 
         return query('ECONOBOT',{
             query:'INSERT INTO usuarios VALUES(?,?)',
-            values:[id,nome_completo.toUpperCase()]
+            values:[whatsapp_id,nome_completo.toUpperCase()]
         });
 
     }
 
-    setCurrentStep(id,step){
-        
-        return query('ECONOBOT',
-        {
-            query:'UPDATE usuarios SET current_step = ? WHERE id = ?',
-            values:[step,id]
-        })
+    delete(userId){
+
+        return query('ECONOBOT',{
+            query:'DELETE FROM usuarios WHERE id = ?',
+            values:[userId]
+        });
+
     }
+
+    update(userId,{ nome_completo }){
+
+        return query('ECONOBOT',{
+            query:'UPDATE usuarios SET nome_completo = ?',
+            values:[nome_completo]
+        })
+
+    }
+
 
 }
 
