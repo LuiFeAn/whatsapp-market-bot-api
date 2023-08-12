@@ -5,9 +5,19 @@ const bot = require("../bot");
 
 class DemandService {
 
-    async getAll({ userId, type, date, page, quanty }){
+    async getAll({ userId, type, date, page, quanty, bot = true }){
 
         let offset = 0;
+
+        if( bot ){
+
+            const demands = await demandRepository.findAllBot({
+                userId
+            });
+
+            return demands;
+
+        }
 
         if( page > 1 ){
 
@@ -43,21 +53,17 @@ class DemandService {
 
         await demandRepository.create({ cartId, deliveryMethod, paymentMethod, observation, total, exchange });
 
-        const demand = await this.getOne({
-            cartId
-        });
-
         const clients = clientRepository.allClients();
 
         clients.forEach(function(client){
 
-            client.emit('new-demand',demand);
+            client.emit('new-demand');
 
         });
 
     }
 
-    async partialUpdate({ id, status }){
+    async partialUpdate({ id, status, motivo }){
 
         status.toUpperCase();
 
@@ -69,9 +75,9 @@ class DemandService {
 
                 clearMemoryService.clearUserLastProductAndList(demand.usuario_id);
 
-                await bot.say(demand.usuario_id,`${demand.usuario_id}, infelizmente seu pedido foi recusado.`);
+                await bot.say(demand.usuario_id,`${demand.usuario_id}, infelizmente seu pedido foi recusado. Motivo: ${motivo}`);
 
-                await demandRepository.updateStatus(id,'PEDIDO RECUSADO');
+                await demandRepository.updateStatus(id,'RECUSADO');
 
                 return
 
@@ -81,7 +87,7 @@ class DemandService {
 
                 await bot.say(demand.usuario_id,`${demand.usuario_id}, Seu pedido foi aceito e já se encontra em fase de separação ! 😍.`);
 
-                await demandRepository.updateStatus(id,'EM FASE DE SEPARAÇÃO');
+                await demandRepository.updateStatus(id,'SEPARAÇÃO');
 
                 return
 
