@@ -12,6 +12,7 @@ class DemandController {
             userId: usuario_id,
             type: tipo,
             date: data,
+            bot: false,
             quanty: quantidade,
             page: pagina
         });
@@ -24,11 +25,12 @@ class DemandController {
 
         const { id } = req.params;
 
-        const { status } = req.body;
+        const { status, motivo } = req.body;
 
         await demandService.partialUpdate({
             id,
-            status
+            status,
+            motivo
         });
 
         res.sendStatus(200);
