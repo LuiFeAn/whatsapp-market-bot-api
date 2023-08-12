@@ -10,11 +10,13 @@ class DemandRepository {
             SELECT
             usuarios.id as usuario_id, 
             usuarios.nome_completo,
+            carrinhos.id as carrinho_id,
             usuario_informacoes.numero_telefone,
             usuario_informacoes.endereco,
             usuario_informacoes.bairro,
             usuario_informacoes.numero_casa,
             usuario_informacoes.complemento,
+            pedidos.id as demand_id,
             pedidos.metodo_entrega,
             pedidos.metodo_pagamento,
             pedidos.observacao,
@@ -37,6 +39,16 @@ class DemandRepository {
         return query('ECONOBOT',{
             query:'INSERT INTO pedidos (carrinho_id, metodo_entrega, metodo_pagamento, observacao, total, troco) VALUES (?,?,?,?,?,?);',
             values:[cartId,deliveryMethod,paymentMethod,observation,total,exchange]
+        });
+
+    }
+
+
+    findAllBot({ userId }){
+
+        return query('ECONOBOT',{
+            query: `${this.commonSelectQuery} WHERE carrinhos.usuario_id = ?`,
+            values:[userId]
         });
 
     }
