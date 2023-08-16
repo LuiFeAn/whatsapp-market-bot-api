@@ -10,3 +10,5 @@ userInfosRoutes.get('/:id',userInfosController.show);
 userInfosRoutes.post('/',userInfosController.create);
 
 userInfosRoutes.patch('/:id',userInfosController.partialUpdate);
+
+module.exports = userInfosRoutes;

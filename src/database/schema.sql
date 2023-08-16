@@ -99,5 +99,11 @@ CREATE TABLE aceita_promocoes(
 
 );
 
+CREATE TABLE encartes(
+
+    id INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    encarte VARCHAR(500) NOT NUll
+
+);
 
 

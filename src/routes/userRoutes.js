@@ -13,3 +13,5 @@ userRoutes.put('/:id',userController.update);
 userRoutes.post('/:id',userController.store);
 
 userRoutes.delete('/:id',userController.delete);
+
+module.exports = userRoutes;
