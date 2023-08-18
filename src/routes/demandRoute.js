@@ -10,6 +10,6 @@ const expressValidator = require('../middlewares/expressValidator');
 
 demandRoutes.get('/',demandDto.get,expressValidator,demandController.index);
 
-demandRoutes.patch('/',demandController.partialUpdate);
+demandRoutes.patch('/:id',demandController.partialUpdate);
 
 module.exports = demandRoutes 

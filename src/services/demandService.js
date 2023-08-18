@@ -63,48 +63,55 @@ class DemandService {
 
     }
 
-    async partialUpdate({ id, status, motivo }){
+    async partialUpdate({ id, status, reason }){
 
-        status.toUpperCase();
+        status = status.toUpperCase();
 
-        const demand = await this.getDemand(id);
+        const demand = await this.getOne({
+            demandId: id
+        });
 
-        if( status ){
 
-            if( status === 'RECUSADO' ){
+        const statusHandler = {
+
+            'RECUSADO': async () => {
 
                 clearMemoryService.clearUserLastProductAndList(demand.usuario_id);
 
-                await bot.say(demand.usuario_id,`${demand.usuario_id}, infelizmente seu pedido foi recusado. Motivo: ${motivo}`);
+                await demandRepository.updateStatus(demand.demand_id,'RECUSADO');
 
-                await demandRepository.updateStatus(id,'RECUSADO');
+                await bot.say(demand.usuario_id,`Infelizmente *seu pedido N° ${demand.demand_id} foi recusado*.\nMotivo: ${reason}`);
 
-                return
+            },
+
+            'APROVADO': async () => {
+
+                await demandRepository.updateStatus(demand.demand_id,'SEPARAÇÃO');
+
+                await bot.say(demand.usuario_id,`*Seu pedido N° ${demand.demand_id} foi aceito e está em fase de separação o tempo médio é de 45 min ⏱️*`);
+
+            },
+
+            'SAIU PARA ENTREGA': async () => {
+
+                await demandRepository.updateStatus(demand.demand_id,'ENTREGA');
+
+                await bot.say(demand.usuario_id,`*Trago notícias ! seu pedido N° ${demand.demand_id} saiu para entrega e logo estará em suas mãos 😉😎.*\n\n*Por gentileza, aguarde o entregador em frente a sua residência.*`);
+
+            },
+
+            'FINALIZADO': async () => {
+
+                await demandRepository.updateStatus(demand.demand_id,'FINALIZADO');
+
+                await bot.say(demand.usuario_id,`*Seu pedido N° ${demand.demand_id} foi finalizado. Muito obrigado !*\n\n*Econocompras*\n*Nosso negócio é estar com você 😉*`);
 
             }
 
-            if( status === 'APROVADO' ){
-
-                await bot.say(demand.usuario_id,`${demand.usuario_id}, Seu pedido foi aceito e já se encontra em fase de separação ! 😍.`);
-
-                await demandRepository.updateStatus(id,'SEPARAÇÃO');
-
-                return
-
-            }
-
-            if( status === 'SAIU PARA ENTREGA'){
-
-            }
-
-            if( status === 'FINALIZADO' ){
-
-                
-
-            }
-    
 
         }
+
+        statusHandler[status]();
 
     }
 

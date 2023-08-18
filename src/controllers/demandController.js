@@ -6,15 +6,15 @@ class DemandController {
 
     async index(req,res){
 
-        const { usuario_id, tipo, data, quantidade, pagina } = req.query;
+        const { userId, type, date, quanty, page } = req.query;
 
         const demands = await demandService.getAll({
-            userId: usuario_id,
-            type: tipo,
-            date: data,
+            userId,
+            type,
+            date,
             bot: false,
-            quanty: quantidade,
-            page: pagina
+            quanty,
+            page,
         });
 
         res.json(demands);
@@ -25,12 +25,12 @@ class DemandController {
 
         const { id } = req.params;
 
-        const { status, motivo } = req.body;
+        const { status, reason } = req.body;
 
         await demandService.partialUpdate({
             id,
             status,
-            motivo
+            reason
         });
 
         res.sendStatus(200);

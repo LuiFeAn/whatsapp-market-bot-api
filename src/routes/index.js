@@ -10,12 +10,12 @@ const userInfosRoutes = require("./userInfosRoutes");
 
 const bookletRoutes = require("./bookletRoutes");
 
-routes.use('/pedidos',demandRoute);
+routes.use('/demands',demandRoute);
 
-routes.use('/usuarios',userRoutes);
+routes.use('/users',userRoutes);
 
-routes.use('/usuarios/informacoes',userInfosRoutes);
+routes.use('/users/infos',userInfosRoutes);
 
-routes.use('/encartes',bookletRoutes);
+routes.use('/booklets',bookletRoutes);
 
 module.exports = routes;

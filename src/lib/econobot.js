@@ -26,7 +26,6 @@ const userLastSelectedItemInMemoryRepository = require("../repositories/inMemory
 const userStateInMemoryRepository = require("../repositories/inMemory/userStateInMemoryRepository");
 const userDataInMemoryRepository = require("../repositories/inMemory/userDataInMemoryRepository");
 const userLastMessageService = require('../services/userLastMessageInMemoryService');
-const demandRepository = require("../repositories/demandRepository");
 
 const clearMemoryService = require("../services/clearMemoryService");
 const cartService = require("../services/userCartService");
@@ -40,7 +39,6 @@ const validOptions = require("../utils/validOptions");
 const onliFirstName = require("../utils/onlyFirstName");
 const currentDate = require("../utils/currentDate");
 
-const { getDistance, convertDistance } = require('geolib');
 
 class Econobot {
 

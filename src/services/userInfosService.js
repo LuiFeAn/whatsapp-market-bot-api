@@ -13,9 +13,9 @@ class UserInfosService {
 
     }
 
-    async insertInfos({usuario_id, numero_telefone, endereco, bairro, numero_casa, complemento}){
+    async insertInfos({userId, phone, adress, neighborhood, houseNumber, complement}){
         
-        const userInfos = await this.getOne(usuario_id);
+        const userInfos = await this.getOne(userId);
 
         if( userInfos ){
 
@@ -29,7 +29,7 @@ class UserInfosService {
         }
 
         return userInfosRepository.insertInfos({
-            usuario_id, numero_telefone, endereco, bairro, numero_casa, complemento
+            usuario_id: userId, numero_telefone: phone, endereco: adress, bairro: neighborhood, numero_casa: houseNumber, complemento: complement
         });
 
 

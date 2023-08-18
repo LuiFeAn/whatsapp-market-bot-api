@@ -4,12 +4,12 @@ class UserController {
 
     async index(req,res){
 
-        const { pesquisa, quantidade, pagina } = req.query;
+        const { search, quanty, page} = req.query;
 
         const users = await userService.getAll({
-            search: pesquisa,
-            quanty: quantidade,
-            page: pagina
+            search,
+            quanty,
+            page,
         });;
 
         res.json(users);

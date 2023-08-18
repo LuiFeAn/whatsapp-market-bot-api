@@ -14,10 +14,10 @@ class UserInfosController {
 
     async create(req,res){
 
-        const { usuario_id, numero_telefone, endereco, bairro, numero_casa, complemento } = req.body;
+        const { userId, phone, adress, neighborhood, houseNumber, complement } = req.body;
 
         await userInfosService.insertInfos({
-            usuario_id, numero_telefone, endereco, bairro, numero_casa, complemento
+            userId, phone, adress, neighborhood, houseNumber, complement
         });
 
         res.sendStatus(200);
