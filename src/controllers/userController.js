@@ -4,11 +4,13 @@ class UserController {
 
     async index(req,res){
 
-        const { search, quanty, page} = req.query;
+        const { search, quanty, page, contacts, withPromotion } = req.query;
 
         const users = await userService.getAll({
             search,
             quanty,
+            contacts,
+            withPromotion,
             page,
         });;
 
@@ -29,11 +31,11 @@ class UserController {
 
     async store(req,res){
 
-        const { whatsapp_id, nome_completo } = req.body;
+        const { whatsappId, fullName } = req.body;
 
         await userService.create({
-            whatsapp_id,
-            nome_completo
+            whatsappId,
+            fullName
         });
 
         res.sendStatus(200);
@@ -52,12 +54,12 @@ class UserController {
 
     async update(req,res){
 
-        const { nome_completo  } = req.body;
+        const { fullName  } = req.body;
 
         const { id } = req.params;
 
         await userService.update(id,{
-            nome_completo
+            fullName
         });
 
         res.sendStatus(200);

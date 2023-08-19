@@ -1,9 +1,16 @@
 const userRepository = require("../repositories/userRepository");
 const ApiError = require("../errors/defaultError");
+const bot = require('../bot');
 
 class UserService {
 
-    async getAll({search,quanty,page}){
+    async getAll({
+        search,
+        quanty = 10,
+        page = 0,
+        contacts,
+        withPromotion
+    }){
 
         let offset = 0;
 
@@ -13,19 +20,30 @@ class UserService {
 
         }
 
-        const users = await userRepository.findAll({
+        let users = [];
+
+        if( contacts ){
+
+            users = await bot.client.getContacts();
+
+            return users;
+
+        }
+
+        users = await userRepository.findAll({
             search,
             quanty,
-            page
+            page,
+            withPromotion
         });
 
         return users;
 
     }
 
-    async create({ whatsapp_id, nome_completo }){
+    async create({ whatsappId,fullName }){
 
-        const user = await this.getOne(whatsapp_id);
+        const user = await this.getOne(whatsappId);
 
         if( user ){
 
@@ -39,8 +57,8 @@ class UserService {
         }
 
         return userRepository.insertUser({
-            whatsapp_id,
-            nome_completo
+            whatsapp_id: whatsappId,
+            nome_completo: fullName
         });
 
     }
@@ -59,11 +77,11 @@ class UserService {
 
     }
 
-    async update(id,{ nome_completo }){
+    async update(id,{ fullName }){
 
     
         await userRepository.update(id,{
-            nome_completo
+            nome_completo: fullName
         })
 
 

@@ -2,7 +2,7 @@ const query = require('../database/mysql-async');
 
 class UserRepository {
 
-    findAll({ search, quanty, page }){
+    findAll({ search, quanty, page, withPromotion }){
 
         let restOfQuery = '';
 
@@ -15,6 +15,12 @@ class UserRepository {
             params.push(`${search}%`);
             
             params.push(`${search}%`);
+
+        }
+
+        if( withPromotion ){
+
+            restOfQuery = 'JOIN aceita_promocoes ON aceita_promocoes.usuario_id = usuarios.id';
 
         }
 

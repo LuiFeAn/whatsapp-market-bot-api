@@ -4,14 +4,18 @@ const userRoutes = Router();
 
 const userController = require("../controllers/userController");
 
-userRoutes.get('/',userController.index);
+const userDto = require('../dtos/userDto');
 
-userRoutes.get('/:id',userController.show);
+const expressValidator = require('../middlewares/expressValidator');
 
-userRoutes.put('/:id',userController.update);
+userRoutes.get('/',userDto.get,expressValidator,userController.index);
 
-userRoutes.post('/:id',userController.store);
+userRoutes.get('/:id',userDto.getWithParam,expressValidator,userController.show);
 
-userRoutes.delete('/:id',userController.delete);
+userRoutes.put('/:id',userDto.update,expressValidator,userController.update);
+
+userRoutes.post('/:id',userDto.post,expressValidator,userController.store);
+
+userRoutes.delete('/:id',userDto.delete,expressValidator,userController.delete);
 
 module.exports = userRoutes;
