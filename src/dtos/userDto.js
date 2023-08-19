@@ -1,5 +1,14 @@
 const { query, param, body } = require('express-validator');
 
+function pageLimit(value){
+
+    if( value <= 0 ){
+
+        throw new Error('Por favor, informe um valor de página válido');
+
+    }
+
+}
 
 module.exports = {
 
@@ -8,7 +17,8 @@ module.exports = {
         query('page').
         notEmpty().
         withMessage('Necessário informar a página').
-        customSanitizer( value => Number(value)),
+        customSanitizer( value => Number(value))
+        .custom(pageLimit),
 
         query('quanty').
         notEmpty().

@@ -8,16 +8,18 @@ class UserService {
     async getAll({
         search,
         quanty = 10,
-        page = 0,
+        page = 1,
         contacts,
         withPromotion
     }){
 
         let offset = 0;
 
-        if( page > 1 ){
+        page--;
 
-            offset = (page - 1) * Number(quanty);
+        if( page > 1 ){
+            
+            offset = page * Number(quanty);
 
         }
 
