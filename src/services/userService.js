@@ -1,5 +1,6 @@
 const userRepository = require("../repositories/userRepository");
 const ApiError = require("../errors/defaultError");
+const pagination = require("../utils/pagination");
 const bot = require('../bot');
 
 class UserService {
@@ -26,7 +27,12 @@ class UserService {
 
             users = await bot.client.getContacts();
 
-            return users;
+            users = pagination({
+                items: users,
+                itemsPerPage: quanty
+            });
+
+            return users[page];
 
         }
 
