@@ -1,4 +1,5 @@
 const { query, body } = require('express-validator');
+const isValidFields = require("../validations/isValidFields");
 
 
 module.exports = {
@@ -16,7 +17,12 @@ module.exports = {
         body('status')
         .optional()
         .isString()
-        .withMessage('Por favor, enviar uma string'),
+        .withMessage('Por favor, enviar uma string')
+        .custom( value => isValidFields({
+            requestField: value,
+            validFields:['RECUSADO','APROVADO','RECEBÍVEL','SAIU PARA ENTREGA','FINALIZADO']
+        }))
+        .withMessage('Parâmetro inválido'),
 
         body('reason')
         .optional()
