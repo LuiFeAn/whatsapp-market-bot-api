@@ -106,4 +106,13 @@ CREATE TABLE encartes(
 
 );
 
+CREATE TABLE comprovantes(
+
+    id INT(10) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    comprovante VARCHAR(500) NOT NULL,
+    usuario_id VARCHAR(30) NOT NULL,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE ON UPDATE CASCADE
+
+);
+
 
