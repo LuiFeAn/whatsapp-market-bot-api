@@ -3,6 +3,7 @@ const cartService = require('../services/userCartService');
 const clearMemoryService = require("../services/clearMemoryService");
 const clientRepository = require('../repositories/clientsRepository');
 const onlyFristName = require('../utils/onlyFirstName');
+const userStateInMemoryRepository = require('../repositories/inMemory/userStateInMemoryRepository');
 const bot = require("../bot");
 
 class DemandService {
@@ -113,7 +114,7 @@ class DemandService {
 
             'FINALIZADO': async () => {
 
-                clearMemoryService.clearUserLastProductAndList(demand.usuario_id);
+                userStateInMemoryRepository.removeState(demand.usuario_id);
 
                 await cartService.partialUpdate(demand.carrinho_id,{
                     cartStatus:'FECHADO'
