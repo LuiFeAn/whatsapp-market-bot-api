@@ -1198,7 +1198,7 @@ class Econobot {
                         total: userData.demand_total
                     });
 
-                    await cartService.partialUpdate(user.id,{
+                    await cartService.partialUpdate(cart.id,{
                         cartStatus:'ANÁLISE'
                     });
 

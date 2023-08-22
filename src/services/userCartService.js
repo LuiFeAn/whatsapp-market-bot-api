@@ -23,11 +23,11 @@ class CartService {
     }
 
 
-    async partialUpdate(userId,{ cartStatus }){
+    async partialUpdate(cartId,{ cartStatus }){
 
         if( cartStatus ){
 
-            await cartRepository.updateStatus(userId,cartStatus);
+            await cartRepository.updateStatus(cartId,cartStatus);
 
         }
 

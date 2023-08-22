@@ -42,7 +42,7 @@ class CartRepository {
     updateStatus(userId,status){
 
         return query('ECONOBOT',{
-            query:'UPDATE carrinhos SET status = ? WHERE usuario_id = ?',
+            query:'UPDATE carrinhos SET status = ? WHERE id = ?',
             values:[status,userId]
         })
 

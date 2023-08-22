@@ -1,6 +1,8 @@
 const demandRepository = require("../repositories/demandRepository");
+const cartService = require('../services/userCartService');
 const clearMemoryService = require("../services/clearMemoryService");
 const clientRepository = require('../repositories/clientsRepository');
+const onlyFristName = require('../utils/onlyFirstName');
 const bot = require("../bot");
 
 class DemandService {
@@ -71,6 +73,7 @@ class DemandService {
             demandId: id
         });
 
+        const userName = onlyFristName(demand.nome_completo);
 
         const statusHandler = {
 
@@ -80,7 +83,7 @@ class DemandService {
 
                 await demandRepository.updateStatus(demand.demand_id,'RECUSADO');
 
-                await bot.say(demand.usuario_id,`Infelizmente *seu pedido N° ${demand.demand_id} foi recusado*.\nMotivo: ${reason}`);
+                await bot.say(demand.usuario_id,`${userName}, infelizmente *seu pedido N° ${demand.demand_id} foi recusado*.\nMotivo: ${reason}`);
 
             },
 
@@ -88,7 +91,15 @@ class DemandService {
 
                 await demandRepository.updateStatus(demand.demand_id,'SEPARAÇÃO');
 
-                await bot.say(demand.usuario_id,`*Seu pedido N° ${demand.demand_id} foi aceito e está em fase de separação o tempo médio é de 45 min ⏱️*`);
+                await bot.say(demand.usuario_id,`*${userName}, seu pedido N° ${demand.demand_id} foi aceito e está em fase de separação o tempo médio é de 45 min ⏱️*`);
+
+            },
+
+            'RECEBÍVEL': async () => {
+
+                await demandRepository.updateStatus(demand.demand_id,'RECEBÍVEL');
+
+                await bot.say(demand.usuario_id,`*${userName}, seu pedido N° ${demand.demand_id} já pode ser buscado no estabelecimento !*\n\n*O nosso endereço é:*\n*Rua Sebastião Lopes de Menzes 90, Biarro Nova Brasília, Campina Grande.*`);
 
             },
 
@@ -96,15 +107,21 @@ class DemandService {
 
                 await demandRepository.updateStatus(demand.demand_id,'ENTREGA');
 
-                await bot.say(demand.usuario_id,`*Trago notícias ! seu pedido N° ${demand.demand_id} saiu para entrega e logo estará em suas mãos 😉😎.*\n\n*Por gentileza, aguarde o entregador em frente a sua residência.*`);
+                await bot.say(demand.usuario_id,`*${userName}, trago notícias ! seu pedido N° ${demand.demand_id} saiu para entrega e logo estará em suas mãos 😉😎.*\n\n*Por gentileza, aguarde o entregador em frente a sua residência.*`);
 
             },
 
             'FINALIZADO': async () => {
 
+                clearMemoryService.clearUserLastProductAndList(demand.usuario_id);
+
+                await cartService.partialUpdate(demand.carrinho_id,{
+                    cartStatus:'FECHADO'
+                });
+
                 await demandRepository.updateStatus(demand.demand_id,'FINALIZADO');
 
-                await bot.say(demand.usuario_id,`*Seu pedido N° ${demand.demand_id} foi finalizado. Muito obrigado !*\n\n*Econocompras*\n*Nosso negócio é estar com você 😉*`);
+                await bot.say(demand.usuario_id,`*${userName}, seu pedido N° ${demand.demand_id} foi finalizado. Muito obrigado !*\n\n*Econocompras*\n*Nosso negócio é estar com você 😉*`);
 
             }
 
