@@ -58,7 +58,7 @@ class Econobot {
 
         this.defaultMessages = {
             selectMenuOption:`*A cada etapa algumas opções serão apresentadas para você, e basta você responder com o número ou a letra da a opção desejada*`,
-            initialMenu:'\n*Escolha a opção desejada* ou digite *C* para acessar o carrinho\n\n1 - Fazer pedido',
+            initialMenu:'\n*Escolha a opção desejada* ou digite *C* para acessar o carrinho\n\n1 - Fazer pedido\n2 - Receber novidades e promoções',
             menuCheckout:"*O que deseja fazer ? digite a opção desejada.*\n\n1 - Pesquisar novo(s) produto(s)\n2 - Deletar Produto\n3 - Alterar quantidade de produto\n4 - Limpar carrinho\n5 - Finalizar pedido\n6 - Finalizar atendimento",
             paymentMenu:"",
             globalConfigs:"C - Carrinho",
@@ -510,7 +510,7 @@ class Econobot {
 
                 'CHOOSE_MENU_OPTION': async () => {
 
-                    const validOptions = ['1'];
+                    const validOptions = ['1','2'];
 
                     const handleMenuOption = {
 
@@ -537,6 +537,24 @@ class Econobot {
                             userStateInMemoryRepository.setState(user.id,"SEARCH_PRODUCT")
 
                             await this.say(user.id,`*Você iniciou um novo pedido. Pesquise por algum produto* ou digite *"C"* para acessar o carrinho`);
+
+                        },
+
+                        '2': async () => {
+
+                            const promotion = await userPromotionService.getPromotion(user.id);
+
+                            if( promotion ){
+
+                                await this.say(user.id,`${user.nome_completo}, você já se encontra na nossa lista 😉!`);
+
+                                return
+
+                            }
+                            
+                            await userPromotionService.acceptPromotion(user.id);
+
+                            await this.say(user.id,`Prontinho ! agora você irá receber todas as nossas futuras promoções e novidades aqui pelo zap 😉`);
 
                         },
 
