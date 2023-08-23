@@ -9,6 +9,7 @@ const qrCodeTerminal = require("qrcode-terminal");
 const { toBRL } = require('../utils/toBRL');
 const env = require("dotenv");
 const { MessageMedia } = require("whatsapp-web.js");
+const fs = require('fs');
 
 env.config();
 
@@ -25,6 +26,7 @@ const itemsListInMemoryRepository = require("../repositories/inMemory/itemsListI
 const userLastSelectedItemInMemoryRepository = require("../repositories/inMemory/userLastSelectedItemInMemoryRepository");
 const userStateInMemoryRepository = require("../repositories/inMemory/userStateInMemoryRepository");
 const userDataInMemoryRepository = require("../repositories/inMemory/userDataInMemoryRepository");
+const proofRepository = require('../repositories/proofRepository');
 const userLastMessageService = require('../services/userLastMessageInMemoryService');
 
 const clearMemoryService = require("../services/clearMemoryService");
@@ -38,6 +40,7 @@ const validIndex = require("../utils/validIndex");
 const validOptions = require("../utils/validOptions");
 const onliFirstName = require("../utils/onlyFirstName");
 const currentDate = require("../utils/currentDate");
+const path = require("path");
 
 
 class Econobot {
@@ -1240,6 +1243,18 @@ class Econobot {
 
                     }
 
+                    const media = await message.downloadMedia();
+
+                    const filePath = path.join(__dirname,'../images/proofs');
+
+                    const fileName = `comprovante_${user.nome_completo}_${Math.round(Math.random() * 343434)}.jpeg`;
+
+                    const filePathName = `${filePath}/${fileName}`;
+
+                    fs.writeFile(filePathName, media.data,"base64",function(err){
+                        if(err) throw new Error('')
+                    });
+
                     await demandService.createDemand({
                         cartId: cart.id,
                         deliveryMethod: userData.delivery_method,
@@ -1247,6 +1262,15 @@ class Econobot {
                         exchange: userData?.exchange_value,
                         observation: userData?.observation,
                         total: userData.demand_total
+                    });
+
+                    const demand = await demandService.getOne({
+                        cartId: cart.id
+                    });
+
+                    await proofRepository.insertProof({
+                        proofPath: fileName,
+                        demandId: demand.demand_id
                     });
 
                     userStateInMemoryRepository.setState(user.id,"FINALLY");
