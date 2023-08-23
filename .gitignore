@@ -1,7 +1,12 @@
+#Dependências
 /node_modules
 
+#Autenticação do zap
 /wpp_auth
+/.wwebjs_cache
 
+#Variáveis de ambiente
 .env
 
-/.wwebjs_cache
+#Arquivos de Upload
+/src/images
