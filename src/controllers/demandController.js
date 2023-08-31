@@ -21,6 +21,18 @@ class DemandController {
 
     }
 
+    async show(req,res){
+
+        const { id } = req.params;
+
+        const demand = await demandService.getOne({
+            demandId: id
+        });
+
+        res.json(demand);
+
+    }
+
     async partialUpdate(req,res){
 
         const { id } = req.params;

@@ -2,6 +2,9 @@ const userRepository = require("../repositories/userRepository");
 const ApiError = require("../errors/defaultError");
 const pagination = require("../utils/pagination");
 const bot = require('../bot');
+const dotenv = require('dotenv');
+
+dotenv.config();
 
 class UserService {
 
@@ -14,6 +17,8 @@ class UserService {
     }){
 
         let offset = 0;
+
+        [ contacts, withPromotion ] = [ contacts, withPromotion ].map( query => JSON.parse(query));
 
         page--;
 
@@ -28,13 +33,31 @@ class UserService {
         if( contacts ){
 
             users = await bot.client.getContacts();
-
+                
             users = pagination({
                 items: users,
                 itemsPerPage: quanty
             });
 
+            users[page] = users[page].map(function(user){
+
+                return {
+                    id: user.id._serialized,
+                    nome_completo: user.name,
+                }
+
+            });
+
+            if( search){
+
+                users[page] = users[page].filter( user => (
+                    user.nome_completo?.toLowerCase().includes(search.toLowerCase()))
+                );
+
+            }
+
             return users[page];
+
 
         }
 

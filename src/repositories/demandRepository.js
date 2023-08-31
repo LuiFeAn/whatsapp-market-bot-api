@@ -22,7 +22,8 @@ class DemandRepository {
             pedidos.observacao,
             pedidos.horario,
             pedidos.total,
-            pedidos.troco
+            pedidos.troco,
+            comprovantes.comprovante
             FROM pedidos
             JOIN carrinhos
             ON carrinhos.id = pedidos.carrinho_id
@@ -30,6 +31,8 @@ class DemandRepository {
             ON usuarios.id = carrinhos.usuario_id
             JOIN usuario_informacoes 
             ON usuario_informacoes.usuario_id = carrinhos.usuario_id
+            JOIN comprovantes
+            ON comprovantes.pedido_id = pedidos.id
         `
 
     }

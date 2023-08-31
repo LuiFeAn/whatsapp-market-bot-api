@@ -17,8 +17,7 @@ module.exports = {
         query('page').
         notEmpty().
         withMessage('Necessário informar a página').
-        customSanitizer( value => Number(value))
-        .custom(pageLimit),
+        customSanitizer( value => Number(value)),
 
         query('quanty').
         notEmpty().
