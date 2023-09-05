@@ -20,6 +20,8 @@ const cartItemsRoutes = require('../routes/cartItemsRoutes');
 
 const proofRoutes = require('./proofRoutes');
 
+const messageRoutes = require('./messageRoutes');
+
 routes.use('/demands',demandRoute);
 
 routes.use('/users',userRoutes);
@@ -33,5 +35,7 @@ routes.use('/send-booklets',sendBookletRoutes);
 routes.use('/cart-items',cartItemsRoutes);
 
 routes.use('/proofs',proofRoutes);
+
+routes.use('/messages',messageRoutes);
 
 module.exports = routes;

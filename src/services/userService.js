@@ -33,13 +33,8 @@ class UserService {
         if( contacts ){
 
             users = await bot.client.getContacts();
-                
-            users = pagination({
-                items: users,
-                itemsPerPage: quanty
-            });
 
-            users[page] = users[page].map(function(user){
+            users = users.map(function(user){
 
                 return {
                     id: user.id._serialized,
@@ -50,11 +45,16 @@ class UserService {
 
             if( search){
 
-                users[page] = users[page].filter( user => (
+                users = users.filter( user => (
                     user.nome_completo?.toLowerCase().includes(search.toLowerCase()))
                 );
 
             }
+                
+            users = pagination({
+                items: users,
+                itemsPerPage: quanty
+            });
 
             return users[page];
 
