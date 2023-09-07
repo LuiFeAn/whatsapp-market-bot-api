@@ -166,7 +166,7 @@ class Econobot {
                         userData.nome_completo = message.body;
 
                         await userRepository.insertUser({
-                            id: message.from,
+                            whatsapp_id: message.from,
                             nome_completo: message.body
                         });
 
