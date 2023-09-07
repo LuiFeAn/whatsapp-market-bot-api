@@ -33,6 +33,8 @@ class UserController {
 
         const { whatsappId, fullName } = req.body;
 
+        console.log(req.body);
+
         await userService.create({
             whatsappId,
             fullName

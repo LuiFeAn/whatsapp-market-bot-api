@@ -14,7 +14,7 @@ userRoutes.get('/:id',userDto.getWithParam,expressValidator,userController.show)
 
 userRoutes.put('/:id',userDto.update,expressValidator,userController.update);
 
-userRoutes.post('/:id',userDto.post,expressValidator,userController.store);
+userRoutes.post('/',userDto.post,expressValidator,userController.store);
 
 userRoutes.delete('/:id',userDto.delete,expressValidator,userController.delete);
 

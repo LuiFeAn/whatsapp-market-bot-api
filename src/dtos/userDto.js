@@ -1,5 +1,7 @@
 const { query, param, body } = require('express-validator');
 
+const formatedNumber = require("../utils/formatNumber");
+
 function pageLimit(value){
 
     if( value <= 0 ){
@@ -38,8 +40,9 @@ module.exports = {
 
     post:[
 
-        body('whatsappIds').
+        body('whatsappId').
         notEmpty().
+        customSanitizer( value => formatedNumber(value)).
         withMessage('Por favor, envie o número de whatsapp'),
 
         body('fullName').

@@ -13,11 +13,11 @@ CREATE TABLE usuario_informacoes(
 
     id int(10) NOT NULL PRIMARY KEY AUTO_INCREMENT,
     usuario_id VARCHAR(30) NOT NULL,
-    numero_telefone VARCHAR(25) NOT NULL,
-    endereco VARCHAR(100) NOT NULL,
-    bairro VARCHAR(65) NOT NULL,
-    numero_casa VARCHAR(30000) NOT NULL,
-    complemento VARCHAR(100) NOT NULL,
+    numero_telefone VARCHAR(25),
+    endereco VARCHAR(100),
+    bairro VARCHAR(65),
+    numero_casa VARCHAR(10000),
+    complemento VARCHAR(100),
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE ON UPDATE CASCADE
 
 );
