@@ -31,7 +31,7 @@ class DemandRepository {
             ON usuarios.id = carrinhos.usuario_id
             JOIN usuario_informacoes 
             ON usuario_informacoes.usuario_id = carrinhos.usuario_id
-            JOIN comprovantes
+            LEFT JOIN comprovantes
             ON comprovantes.pedido_id = pedidos.id
         `
 
