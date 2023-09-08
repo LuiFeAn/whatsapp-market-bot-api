@@ -52,13 +52,14 @@ class UserController {
 
     }
 
-    async update(req,res){
+    async partialUpdate(req,res){
 
-        const { fullName  } = req.body;
+        const { fullName, whatsappId  } = req.body;
 
         const { id } = req.params;
 
-        await userService.update(id,{
+        await userService.partialUpdate(id,{
+            whatsappId,
             fullName
         });
 

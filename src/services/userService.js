@@ -111,12 +111,21 @@ class UserService {
 
     }
 
-    async update(id,{ fullName }){
+    async partialUpdate(id,{ whatsappId, fullName }){
 
-    
-        await userRepository.update(id,{
-            nome_completo: fullName
-        })
+        if( whatsappId ){
+
+            await userRepository.updateWhatsappId(id,whatsappId);
+
+            id = whatsappId;
+
+        }
+
+        if( fullName ){
+
+            await userRepository.updateUsername(id,fullName);
+
+        }
 
 
     }

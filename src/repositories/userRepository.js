@@ -60,11 +60,22 @@ class UserRepository {
 
     }
 
-    update(userId,{ nome_completo }){
+    updateUsername(userId,fullName){
+
+        console.log(userId,fullName);
 
         return query('ECONOBOT',{
-            query:'UPDATE usuarios SET nome_completo = ?',
-            values:[nome_completo]
+            query:'UPDATE usuarios SET nome_completo = ? WHERE id = ?',
+            values:[fullName,userId]
+        })
+
+    }
+
+    updateWhatsappId(userId,whatsappId){
+
+        return query('ECONOBOT',{
+            query:'UPDATE usuarios SET id = ? WHERE id = ?',
+            values:[whatsappId,userId]
         })
 
     }

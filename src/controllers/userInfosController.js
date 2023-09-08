@@ -28,10 +28,14 @@ class UserInfosController {
 
         const id = req.params;
 
-        const { numero_telefone, endereco, bairro, numero_casa, complemento } = req.body;
+        const { phone, adress, neighborhood, houseNumber, complement } = req.body;
 
         await userInfosService.partialUpdate(id,{
-            numero_telefone, endereco, bairro, numero_casa, complemento
+            numero_telefone: phone, 
+            endereco: adress, 
+            bairro: neighborhood, 
+            numero_casa: houseNumber, 
+            complemento: complement
         });
 
         res.sendStatus(200);
