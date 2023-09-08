@@ -42,7 +42,6 @@ module.exports = {
 
         body('whatsappId').
         notEmpty().
-        customSanitizer( value => formatedNumber(value)).
         withMessage('Por favor, envie o número de whatsapp'),
 
         body('fullName').

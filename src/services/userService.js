@@ -2,6 +2,7 @@ const userRepository = require("../repositories/userRepository");
 const ApiError = require("../errors/defaultError");
 const pagination = require("../utils/pagination");
 const bot = require('../bot');
+const formatNumberId = require('../utils/formatNumber');
 const dotenv = require('dotenv');
 
 dotenv.config();
@@ -81,7 +82,7 @@ class UserService {
             throw new ApiError({
                 statusCode:409,
                 errors:[
-                    'Usuário já cadastrado'
+                    'Número de WhatsApp já cadastrado'
                 ]
             });
 
@@ -96,9 +97,11 @@ class UserService {
 
     async getOne(userId){
 
-        const users = await userRepository.findOne(userId);
+        const user = await userRepository.findOne({
+            id: userId
+        });
 
-        return users;
+        return user;
 
     }
 
