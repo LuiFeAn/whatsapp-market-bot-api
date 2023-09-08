@@ -13,9 +13,9 @@ class UserInfosService {
 
     }
 
-    async insertInfos({userId, phone, adress, neighborhood, houseNumber, complement}){
+    async insertInfos({whatsappId, contactNumber, phone, adress, neighborhood, houseNumber, complement}){
         
-        const userInfos = await this.getOne(userId);
+        const userInfos = await this.getOne(whatsappId);
 
         if( userInfos ){
 
@@ -29,54 +29,58 @@ class UserInfosService {
         }
 
         return userInfosRepository.insertInfos({
-            usuario_id: userId, numero_telefone: phone, endereco: adress, bairro: neighborhood, numero_casa: houseNumber, complemento: complement
+            usuario_id: whatsappId, numero_telefone: contactNumber, endereco: adress, bairro: neighborhood, numero_casa: houseNumber, complemento: complement
         });
 
 
     }
 
-    async partialUpdate(id,{numero_telefone, endereco, bairro, numero_casa, complemento}){
+    async partialUpdate(id,{cellPhone, adress, neighborhood, houseNumber, complement}){
 
-        const user = await this.getOne(id);
+        const userInfos = await this.getOne(id);
 
-        if( !user ){
+        if( !userInfos ){
 
-            throw new ApiError({
-                statusCode:404,
-                errors:[
-                    "Usuário inexistente"
-                ]
+            await this.insertInfos({
+                whatsappId:id,
+                contactNumber: cellPhone,
+                adress,
+                neighborhood,
+                houseNumber,
+                complement
             });
 
-        }
-
-        if( numero_telefone ){
-
-            await userInfosRepository.updatePhoneNumber(id,numero_telefone);
+            return
 
         }
 
-        if( endereco ){
+        if( cellPhone ){
 
-            await userInfosRepository.updateAdress(id,endereco);
-
-        }
-
-        if( bairro ){
-
-            await userInfosRepository.updateNeighBorHood(id,bairro);
+            await userInfosRepository.updatePhoneNumber(id,cellPhone);
 
         }
 
-        if( numero_casa ){
+        if( adress ){
 
-            await userInfosRepository.updatePhoneNumber(id,numero_casa);
+            await userInfosRepository.updateAdress(id,adress);
 
         }
 
-        if( complemento ){
+        if( neighborhood ){
 
-            await userInfosRepository.updateComplement(id,complemento);
+            await userInfosRepository.updateNeighBorHood(id,neighborhood);
+
+        }
+
+        if( houseNumber ){
+
+            await userInfosRepository.updateHouseNumber(id,houseNumber);
+
+        }
+
+        if( complement ){
+
+            await userInfosRepository.updateComplement(id,complement);
 
         }
 

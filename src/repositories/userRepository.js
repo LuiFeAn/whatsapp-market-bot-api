@@ -25,7 +25,7 @@ class UserRepository {
         }
 
         return query('ECONOBOT',{
-            query:`SELECT * FROM usuarios ${restOfQuery} ORDER BY nome_completo ASC LIMIT ? OFFSET ?`,
+            query:`SELECT usuarios.id as usuario_id, usuarios.nome_completo FROM usuarios ${restOfQuery} ORDER BY nome_completo ASC LIMIT ? OFFSET ?`,
             values:[...params,quanty,page]
         })
 
@@ -61,8 +61,6 @@ class UserRepository {
     }
 
     updateUsername(userId,fullName){
-
-        console.log(userId,fullName);
 
         return query('ECONOBOT',{
             query:'UPDATE usuarios SET nome_completo = ? WHERE id = ?',
