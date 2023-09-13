@@ -33,7 +33,15 @@ class UserService {
 
         if( contacts ){
 
-            users = await bot.client.getContacts() || [];
+            try{
+
+                users = await bot.client.getContacts();
+
+            }catch(err){
+
+                return []
+
+            }
 
             users = users.map(function(user){
 
