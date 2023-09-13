@@ -33,12 +33,12 @@ class UserService {
 
         if( contacts ){
 
-            users = await bot.client.getContacts();
+            users = await bot.client.getContacts() || [];
 
             users = users.map(function(user){
 
                 return {
-                    id: user.id._serialized,
+                    usuario_id: user.id._serialized,
                     nome_completo: user.name,
                 }
 

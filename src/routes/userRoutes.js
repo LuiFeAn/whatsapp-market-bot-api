@@ -12,7 +12,7 @@ userRoutes.get('/',userDto.get,expressValidator,userController.index);
 
 userRoutes.get('/:id',userDto.getWithParam,expressValidator,userController.show);
 
-userRoutes.patch('/:id',userDto.update,expressValidator,userController.partialUpdate);
+userRoutes.patch('/:id',userController.partialUpdate);
 
 userRoutes.post('/',userDto.post,expressValidator,userController.store);
 

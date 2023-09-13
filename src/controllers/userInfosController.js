@@ -14,11 +14,7 @@ class UserInfosController {
 
     async create(req,res){
 
-        const { userId, phone, adress, neighborhood, houseNumber, complement } = req.body;
-
-        await userInfosService.insertInfos({
-            userId, phone, adress, neighborhood, houseNumber, complement
-        });
+        await userInfosService.insertInfos(req.body);
 
         res.sendStatus(200);
 
@@ -26,17 +22,9 @@ class UserInfosController {
 
     async partialUpdate(req,res){
 
-        const id = req.params;
+        const { id } = req.params;
 
-        const { phone, adress, neighborhood, houseNumber, complement } = req.body;
-
-        await userInfosService.partialUpdate(id,{
-            numero_telefone: phone, 
-            endereco: adress, 
-            bairro: neighborhood, 
-            numero_casa: houseNumber, 
-            complemento: complement
-        });
+        await userInfosService.partialUpdate(id,req.body);
 
         res.sendStatus(200);
 
