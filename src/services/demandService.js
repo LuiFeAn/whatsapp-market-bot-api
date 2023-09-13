@@ -96,15 +96,15 @@ class DemandService {
 
             },
 
-            'RECEBÍVEL': async () => {
+            'BUSCAR NA LOJA': async () => {
 
-                await demandRepository.updateStatus(demand.demand_id,'RECEBÍVEL');
+                await demandRepository.updateStatus(demand.demand_id,'ENTREGA');
 
                 await bot.say(demand.usuario_id,`*${userName}, seu pedido N° ${demand.demand_id} já pode ser buscado no estabelecimento !*\n\n*O nosso endereço é:*\n*Rua Sebastião Lopes de Menzes 90, Biarro Nova Brasília, Campina Grande.*`);
 
             },
 
-            'SAIU PARA ENTREGA': async () => {
+            'ENTREGAR EM CASA': async () => {
 
                 await demandRepository.updateStatus(demand.demand_id,'ENTREGA');
 
