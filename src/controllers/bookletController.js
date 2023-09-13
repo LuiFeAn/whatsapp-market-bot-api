@@ -12,11 +12,13 @@ class BookletController {
 
     async create(req,res){
 
-        const { file:{ path } } = req;
-
         const host = req.get('host');
 
-        await bookletService.insertBooklet(host,path);
+        await bookletService.insertBooklet({
+            currentHost: host,
+            bookletPath: req.file.filename,
+            protocol: req.protocol
+        });
 
         res.sendStatus(204);
 

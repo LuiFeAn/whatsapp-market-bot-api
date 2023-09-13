@@ -8,7 +8,6 @@ function Multer(tory){
             cb(null,path.resolve(__dirname,`../images/${tory}`));
         },
         filename:(req,file,cb)=>{
-            console.log(file)
             cb(null,file.originalname)
         }
     });
