@@ -38,4 +38,6 @@ routes.use('/proofs',proofRoutes);
 
 routes.use('/messages',messageRoutes);
 
+routes.use('/images/booklets',express.static(path.join(__dirname,'../images/booklets')));
+
 module.exports = routes;

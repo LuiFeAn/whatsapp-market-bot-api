@@ -5,9 +5,10 @@ function Multer(tory){
     
     const storage = multer.diskStorage({
         destination:(req,file,cb)=>{
-            cb(null,path.join("./src/"+tory));
+            cb(null,path.resolve(__dirname,`../images/${tory}`));
         },
         filename:(req,file,cb)=>{
+            console.log(file)
             cb(null,file.originalname)
         }
     });

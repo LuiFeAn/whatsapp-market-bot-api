@@ -8,7 +8,7 @@ const bookletController = require("../controllers/bookletController");
 
 bookletRoutes.get('/',bookletController.index);
 
-bookletRoutes.post('/',Multer('images').single('encarte'),bookletController.create);
+bookletRoutes.post('/',Multer('booklets').single('encarte'),bookletController.create);
 
 bookletRoutes.delete('/',bookletController.delete);
 
