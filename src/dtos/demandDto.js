@@ -20,7 +20,7 @@ module.exports = {
         .withMessage('Por favor, enviar uma string')
         .custom( value => isValidFields({
             requestField: value.toUpperCase(),
-            validFields:['RECUSADO','APROVADO','RECEBÍVEL','SAIU PARA ENTREGA','FINALIZADO']
+            validFields:['RECUSADO','APROVADO','BUSCAR NA LOJA','ENTREGAR EM CASA','FINALIZADO']
         }))
         .withMessage('Parâmetro inválido'),
 
