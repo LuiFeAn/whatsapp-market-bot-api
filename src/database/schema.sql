@@ -115,4 +115,13 @@ CREATE TABLE comprovantes(
 
 );
 
+ALTER TABLE usuario_informacoes MODIFY numero_telefone VARCHAR(25) NULL;
+
+ALTER TABLE usuario_informacoes MODIFY endereco VARCHAR(100) NULL;
+
+ALTER TABLE usuario_informacoes MODIFY bairro VARCHAR(65) NULL;
+
+ALTER TABLE usuario_informacoes MODIFY numero_casa VARCHAR(10000) NULL;
+
+ALTER TABLE usuario_informacoes MODIFY complemento VARCHAR(100) NULL;
 
