@@ -14,12 +14,11 @@ class UserService {
         quanty = 10,
         page = 1,
         contacts,
+        getAll,
         withPromotion
     }){
 
         let offset = 0;
-
-        [ contacts, withPromotion ] = [ contacts, withPromotion ].map( query => JSON.parse(query));
 
         page--;
 
@@ -52,6 +51,12 @@ class UserService {
 
             });
 
+            if( getAll ){
+
+                return users;
+
+            }
+
             if( search){
 
                 users = users.filter( user => (
@@ -73,6 +78,7 @@ class UserService {
         users = await userRepository.findAll({
             search,
             quanty,
+            getAll,
             page,
             withPromotion
         });

@@ -2,7 +2,7 @@ const query = require('../database/mysql-async');
 
 class UserRepository {
 
-    findAll({ search, quanty, page, withPromotion }){
+    findAll({ search, quanty, page, withPromotion, getAll }){
 
         let restOfQuery = '';
 
@@ -25,7 +25,7 @@ class UserRepository {
         }
 
         return query('ECONOBOT',{
-            query:`SELECT usuarios.id as usuario_id, usuarios.nome_completo FROM usuarios ${restOfQuery} ORDER BY nome_completo ASC LIMIT ? OFFSET ?`,
+            query:`SELECT usuarios.id as usuario_id, usuarios.nome_completo FROM usuarios ${restOfQuery} ORDER BY nome_completo ASC ${ !getAll ? 'LIMIT ? OFFSET ?' : ''}`,
             values:[...params,quanty,page]
         })
 

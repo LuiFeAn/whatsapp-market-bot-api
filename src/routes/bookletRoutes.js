@@ -10,6 +10,6 @@ bookletRoutes.get('/',bookletController.index);
 
 bookletRoutes.post('/',Multer('booklets').single('encarte'),bookletController.create);
 
-bookletRoutes.delete('/',bookletController.delete);
+bookletRoutes.delete('/:id',bookletController.delete);
 
 module.exports = bookletRoutes;

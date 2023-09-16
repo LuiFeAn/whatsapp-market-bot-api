@@ -1,40 +1,36 @@
 const { query, param, body } = require('express-validator');
 
-const formatedNumber = require("../utils/formatNumber");
-
-function pageLimit(value){
-
-    if( value <= 0 ){
-
-        throw new Error('Por favor, informe um valor de página válido');
-
-    }
-
-}
+const jsonParse = require('../utils/jsonParse'); 
 
 module.exports = {
 
     get:[
 
-        query('page').
+        query('getAll').
         notEmpty().
-        withMessage('Necessário informar a página').
+        isBoolean().
+        withMessage('Por favor, envie um boolean').
+        customSanitizer( value => jsonParse(value)),
+
+        query('page').
+        optional().
         customSanitizer( value => Number(value)),
 
         query('quanty').
-        notEmpty().
-        withMessage('Necessário informar a quantidade de registros').
+        optional().
         customSanitizer( value => Number(value)),
 
         query('contacts').
         optional().
         isBoolean().
-        withMessage('Por favor, enviar um boolean'),
+        withMessage('Por favor, enviar um boolean').
+        customSanitizer( value => jsonParse(value)),
 
         query('withPromotion').
         optional().
         isBoolean().
-        withMessage('Por favor, enviar um boolean')
+        withMessage('Por favor, enviar um boolean').
+        customSanitizer( value => jsonParse(value)),
 
     ],
 

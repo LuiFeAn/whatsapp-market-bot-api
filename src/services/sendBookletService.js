@@ -1,6 +1,11 @@
 const bookletService = require('./bookletService');
 
+const { MessageMedia } = require("whatsapp-web.js");
+
 const bot = require('../bot');
+
+const fs = require('fs');
+const path = require('path');
 
 class SendBookletService{
 
@@ -10,10 +15,22 @@ class SendBookletService{
 
         const promises = [];
 
-        booklets.forEach( booklet => (
-            toUsers.forEach( toUser => (
-                promises.push(bot.sendMessageMediaMedia(toUser.id,'image/jpg',booklet.encarte,'image.jpg'))))
-        ));
+        for await(const booklet of booklets){
+
+            const media = await MessageMedia.fromUrl(booklet.encarte);
+
+            toUsers.forEach(function(user){
+
+                const promise = bot.client.sendMessage(user,media,{
+                    caption:'Image'
+                });
+
+                promises.push(promise);
+
+            });
+
+        }
+
 
         await Promise.all(promises);
 
