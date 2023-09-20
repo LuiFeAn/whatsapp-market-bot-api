@@ -22,7 +22,7 @@ class SendBookletService{
             toUsers.forEach(function(user){
 
                 const promise = bot.client.sendMessage(user,media,{
-                    caption:'Image'
+                    caption: booklet.mensagem
                 });
 
                 promises.push(promise);
