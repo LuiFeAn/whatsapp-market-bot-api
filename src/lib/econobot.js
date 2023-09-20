@@ -682,7 +682,7 @@ class Econobot {
 
                 "SELECT_PRODUCT_QUANTY": async () => {
 
-                    const quanty = Number(message.body);
+                    const quanty = parseInt(message.body);
 
                     const product = userLastSelectedItemInMemoryRepository.getSelectedItem(user.id);
 
@@ -707,7 +707,7 @@ class Econobot {
 
                     userStateInMemoryRepository.setState(user.id,"SEARCH_PRODUCT");
 
-                    await this.say(user.id,`${message.body}X quantidade(s) de "${selected_item.Descricao}" adicionado(s) ao carrinho.`);
+                    await this.say(user.id,`${quanty}X quantidade(s) de "${selected_item.Descricao}" adicionado(s) ao carrinho.`);
 
                     if( userData?.first_buy_promotion ){
 
