@@ -125,3 +125,5 @@ ALTER TABLE usuario_informacoes MODIFY numero_casa VARCHAR(10000) NULL;
 
 ALTER TABLE usuario_informacoes MODIFY complemento VARCHAR(100) NULL;
 
+ALTER TABLE encartes ADD COLUMN mensagem VARCHAR(150) NOT NULL;
+
