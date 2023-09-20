@@ -11,11 +11,11 @@ class BookletRepository {
 
     }
 
-    async insert(bookletPath){
+    async insert(bookletPath,meessage){
 
         return query('ECONOBOT',{
-            query:'INSERT INTO encartes VALUES (NULL,?)',
-            values:[bookletPath]
+            query:'INSERT INTO encartes VALUES (NULL,?,?)',
+            values:[bookletPath,meessage]
         });
 
     }

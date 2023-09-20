@@ -13,13 +13,14 @@ class BookletService {
 
     async insertBooklet({
         currentHost,
+        message,
         bookletPath,
         protocol
     }){
 
         // const imagePath = path.join(__dirname,'..','files');
 
-        await bookletRepository.insert(`${protocol}://${currentHost}/images/booklets/${bookletPath}`);
+        await bookletRepository.insert(`${protocol}://${currentHost}/images/booklets/${bookletPath}`,message);
 
     }
 

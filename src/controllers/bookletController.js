@@ -14,8 +14,11 @@ class BookletController {
 
         const host = req.get('host');
 
+        const { mensagem } = req.body;
+
         await bookletService.insertBooklet({
             currentHost: host,
+            message: mensagem,
             bookletPath: req.file.filename,
             protocol: req.protocol
         });
