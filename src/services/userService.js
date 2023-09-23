@@ -20,11 +20,9 @@ class UserService {
 
         let offset = 0;
 
-        page--;
-
         if( page > 1 ){
             
-            offset = page * Number(quanty);
+            offset = (page - 1) * Number(quanty);
 
         }
 
@@ -79,7 +77,7 @@ class UserService {
             search,
             quanty,
             getAll,
-            page,
+            page: offset,
             withPromotion
         });
 
