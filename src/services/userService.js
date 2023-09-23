@@ -58,7 +58,7 @@ class UserService {
             if( search){
 
                 users = users.filter( user => (
-                    user.nome_completo?.toLowerCase().includes(search.toLowerCase()))
+                    user.nome_completo?.toLowerCase().trim().includes(search.toLowerCase().trim()))
                 );
 
             }
@@ -68,7 +68,7 @@ class UserService {
                 itemsPerPage: quanty
             });
 
-            return users[page];
+            return users[page - 1];
 
 
         }
