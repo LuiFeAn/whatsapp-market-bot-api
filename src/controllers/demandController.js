@@ -6,15 +6,9 @@ class DemandController {
 
     async index(req,res){
 
-        const { userId, type, date, quanty, page } = req.query;
-
         const demands = await demandService.getAll({
-            userId,
-            type,
-            date,
-            bot: false,
-            quanty,
-            page,
+            ...req.query,
+            bot:false    
         });
 
         res.json(demands);

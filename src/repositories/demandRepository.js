@@ -57,23 +57,23 @@ class DemandRepository {
     }
 
 
-    findAll({ type, userId, date, quanty, offset }){
+    findAll({ type, user_search, date, quanty, offset }){
 
         const restOfParams = [];
 
         let restOfQuery = '';
 
-        if( userId ){
+        if( user_search ){
 
-            restOfQuery = 'AND carrinhos.usuario_id = ?';
+            restOfQuery += 'AND usuarios.nome_completo LIKE ?';
 
-            restOfParams.push(userId);
+            restOfParams.push(`${user_search}%`);
 
         }
 
         if( date ){
 
-            restOfQuery = 'AND DATE(pedidos.horario) = ?';
+            restOfQuery += 'AND DATE(pedidos.horario) = ?';
 
             restOfParams.push(date)
 

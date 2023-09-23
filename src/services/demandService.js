@@ -8,7 +8,7 @@ const bot = require("../bot");
 
 class DemandService {
 
-    async getAll({ userId, type, date, page, quanty, bot = true }){
+    async getAll({ user_search, type, date, page, quanty, bot = true }){
 
         let offset = 0;
 
@@ -29,7 +29,7 @@ class DemandService {
         }
 
         const demands = await demandRepository.findAll({
-            userId,
+            user_search,
             type,
             date,
             quanty,
