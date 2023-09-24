@@ -192,7 +192,7 @@ class Econobot {
             const cart = await cartService.getLastCart(user.id);
 
             const demands = await demandService.getAll({
-                userId: user.id,
+                user_search: user.id,
             });
 
             user.nome_completo = onliFirstName(user.nome_completo);
@@ -591,27 +591,18 @@ class Econobot {
 
                     }
 
-                    products.push({Descricao:'',precoUnitario:'',Codigo_Barra:''});
-
                     let productSearchList = '*Digite o número da opção correspondente ao produto*\n';
 
                     products.forEach((product,id)=>{
 
                         const index = id+=1;
 
-                        if( product.Descricao && product.precoUnitario ){
+                        productSearchList += `\n*${index} - ${product.Descricao} - R$ ${product.precoUnitario}*`
 
-                            productSearchList += `\n*${index} - ${product.Descricao} - R$ ${product.precoUnitario}*`
-
-                        }
-
-                        if( id === products.length - 1){
-
-                            productSearchList += `${this.defaultMessages.styleList}*N - Nenhuma das opções*\n*C - Carrinho*`;
-
-                        }
 
                     });
+
+                    productSearchList += `${this.defaultMessages.styleList}*N - Nenhuma das opções*\n*C - Carrinho*`;
 
                     await this.say(user.id,productSearchList);
 

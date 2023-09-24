@@ -15,7 +15,7 @@ class DemandService {
         if( bot ){
 
             const demands = await demandRepository.findAllBot({
-                userId
+                userId: user_search
             });
 
             return demands;
