@@ -84,7 +84,7 @@ class DemandService {
 
                 await demandRepository.updateStatus(demand.demand_id,'RECUSADO');
 
-                await bot.say(demand.usuario_id,`${userName}, infelizmente *seu pedido N° ${demand.demand_id} foi recusado*.\nMotivo: ${reason}`);
+                await bot.say(demand.usuario_id,`${userName}, infelizmente *seu pedido N° ${demand.demand_id} foi recusado*`);
 
             },
 
