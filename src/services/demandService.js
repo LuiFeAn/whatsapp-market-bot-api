@@ -129,7 +129,7 @@ class DemandService {
 
         }
 
-        statusHandler[status]();
+        return statusHandler[status]();
 
     }
 
