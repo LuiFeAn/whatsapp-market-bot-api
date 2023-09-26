@@ -646,6 +646,14 @@ class Econobot {
 
                     }
 
+                    if( product.Estoque <= 5 ){
+
+                        await message.reply(`Infelizmente não possuimos estoque de "${product.Descricao}" no momento 😞`);
+
+                        return
+
+                    }
+
                     const userAlreadyHasProduct = await cartItemsService.findItem(cart.id,product.Descricao);
                     
                     if( userAlreadyHasProduct ){
