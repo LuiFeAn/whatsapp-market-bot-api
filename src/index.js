@@ -14,7 +14,7 @@ dotenv.config();
 
         require("./webSocket");
 
-        opn(`http://localhost:${process.env.SERVER_PORT}`)
+        opn(`http://localhost:3005`)
         
     }
     
