@@ -1,13 +1,23 @@
 const bot = require("./bot");
-require('./routines/clearInMemory');
-require("./webSocket");
 const dotenv = require('dotenv');
+const opn = require('opn');
 
 dotenv.config();
 
-if(JSON.parse(process.env.BOT_ENABLE)){
+( async () => {
 
-    bot.initialize();
+    if(JSON.parse(process.env.BOT_ENABLE)){
+
+        await bot.initialize();
     
-}
+        require('./routines/clearInMemory');
+
+        require("./webSocket");
+
+        opn(`http://localhost:${process.env.SERVER_PORT}`)
+        
+    }
+    
+
+})();
 
