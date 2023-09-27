@@ -9,7 +9,6 @@ const econoApiSVC = new Service({
     description: 'Serviço responsável pela aplicação Econobot, BOT responsável pelo atendimento ao cliente.',
     script: path.join(__dirname,'src','index.js'),
     env: [
-        { name: 'SERVER_PORT', value: '3005' },
         { name: 'ECONOBOT_DB_USER', value: process.env.ECONOBOT_DB_USER },
         { name: 'ECONOBOT_DB_HOST', value: process.env.ECONOBOT_DB_HOST  },
         { name: 'ECONOBOT_DB_PASSWORD', value: process.env.ECONOBOT_DB_PASSWORD },
