@@ -4,6 +4,8 @@ const path = require('path');
 
 const env = require('dotenv');
 
+env.config();
+
 const econoApiSVC = new Service({
     name:'Econobot',
     description: 'Serviço responsável pela aplicação Econobot, BOT responsável pelo atendimento ao cliente.',
