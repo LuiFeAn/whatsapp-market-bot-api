@@ -110,7 +110,7 @@ class Econobot {
 
     async handleMessage(message){
 
-        if( !message.isGroup ){
+        if( !( await message.getChat()).isGroup ){
 
             try {
 
