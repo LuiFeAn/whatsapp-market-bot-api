@@ -11,7 +11,7 @@ env.config();
 
 const app = express();
 
-const PORT_ = process.env.SERVER_PORT || 3004
+const PORT_ = 3005
 
 const server = app.listen(PORT_,function(){
     console.log(`O servidor HTTP foi iniciado na prota ${PORT_} e está pronto para receber requisições`);
