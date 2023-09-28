@@ -20,7 +20,7 @@ class BookletService {
 
         // const imagePath = path.join(__dirname,'..','files');
 
-        await bookletRepository.insert(`${protocol}://${currentHost}/images/booklets/${bookletPath}`,message);
+        await bookletRepository.insert(`${protocol}://${currentHost}/api/images/booklets/${bookletPath}`,message);
 
     }
 
