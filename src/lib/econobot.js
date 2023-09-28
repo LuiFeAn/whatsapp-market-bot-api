@@ -161,6 +161,14 @@ class Econobot {
                                 return;
             
                             }
+
+                            if( message.body.length >= 100 ){
+
+                                await message.reply('Nome inválido. Por favor, forneça um nome válido.');
+
+                                return
+
+                            }
     
                             await message.reply(`Perfeito, ${message.body}`);
     
