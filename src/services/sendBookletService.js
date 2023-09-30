@@ -4,35 +4,25 @@ const { MessageMedia } = require("whatsapp-web.js");
 
 const bot = require('../bot');
 
-const fs = require('fs');
-const path = require('path');
-
 class SendBookletService{
 
     async sendBooklets(toUsers){
 
         const booklets = await bookletService.getAllBooklets();
 
-        const promises = [];
-
         for await(const booklet of booklets){
 
             const media = await MessageMedia.fromUrl(booklet.encarte);
 
-            toUsers.forEach(function(user){
+            for await(const user of toUsers ){
 
-                const promise = bot.client.sendMessage(user,media,{
+                await bot.client.sendMessage(user,media,{
                     caption: booklet.mensagem
                 });
 
-                promises.push(promise);
-
-            });
+            }
 
         }
-
-
-        await Promise.all(promises);
 
     }
 

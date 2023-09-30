@@ -49,6 +49,8 @@ class UserService {
 
             });
 
+            users = users.filter( user => user.usuario_id.length === 17 && user.usuario_id.includes('@c.us'));
+
             if( getAll ){
 
                 return users;
@@ -58,7 +60,7 @@ class UserService {
             if( search){
 
                 users = users.filter( user => (
-                    user.nome_completo?.toLowerCase().trim().includes(search.toLowerCase().trim()))
+                    user.nome_completo.toLowerCase().trim().includes(search.toLowerCase().trim()))
                 );
 
             }
