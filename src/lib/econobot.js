@@ -40,6 +40,7 @@ const validIndex = require("../utils/validIndex");
 const validOptions = require("../utils/validOptions");
 const onliFirstName = require("../utils/onlyFirstName");
 const currentDate = require("../utils/currentDate");
+const clientRepository = require('../repositories/clientsRepository');
 const path = require("path");
 
 
@@ -53,11 +54,15 @@ class Econobot {
 
     currentNumber
 
+    isOnline
+
     constructor({ client, botName }){
 
         this.botName = botName
 
         this.client = client;
+
+        this.isOnline = false
 
         this.defaultMessages = {
             selectMenuOption:`*A cada etapa algumas opções serão apresentadas para você, e basta você responder com o número ou a letra da a opção desejada*`,
@@ -75,30 +80,30 @@ class Econobot {
 
     initialize(){
         
-        this.client.on('qr',this.handleQrCode);
+        this.client.on('qr',(qrCode) => {
 
-        this.client.on('ready',this.handleReady);
+
+            const clients = clientRepository.allClients();
+
+            clients.forEach( client => client.emit('bot-qrcode',qrCode) );
+            
+        });
+
+        this.client.on('ready', () => {
+
+            this.isOnline = true;
+
+            const clients = clientRepository.allClients();
+
+            clients.forEach( client => client.emit('bot-already') );
+
+        });
 
         this.client.on('message',this.handleMessage);
 
         return this.client.initialize();
 
     }
-
-    handleQrCode(qrCode){
-        
-        qrCodeTerminal.generate(qrCode,{
-            small:true
-        })
-
-    }
-
-    handleReady(ready){
-
-        console.log('Econobot está pronto para uso !');
-
-    }
-
 
     async sendMessageMediaMedia(userId,mimeType,data,fileName){
 

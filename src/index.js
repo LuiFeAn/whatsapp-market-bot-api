@@ -1,6 +1,5 @@
 const bot = require("./bot");
 const dotenv = require('dotenv');
-const opn = require('opn');
 
 dotenv.config();
 
@@ -8,13 +7,11 @@ dotenv.config();
 
     if(JSON.parse(process.env.BOT_ENABLE)){
 
-        await bot.initialize();
+        bot.initialize();
     
         require('./routines/clearInMemory');
 
         require("./webSocket");
-
-        opn(`http://localhost:3005`)
         
     }
     

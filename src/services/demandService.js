@@ -58,11 +58,7 @@ class DemandService {
 
         const clients = clientRepository.allClients();
 
-        clients.forEach(function(client){
-
-            client.emit('new-demand');
-
-        });
+        clients.forEach( client => client.emit('new-demand') );
 
     }
 

@@ -22,6 +22,8 @@ const proofRoutes = require('./proofRoutes');
 
 const messageRoutes = require('./messageRoutes');
 
+const botRoutes = require('../routes/botRoutes');
+
 routes.use('/demands',demandRoute);
 
 routes.use('/users',userRoutes);
@@ -37,6 +39,8 @@ routes.use('/cart-items',cartItemsRoutes);
 routes.use('/proofs',proofRoutes);
 
 routes.use('/messages',messageRoutes);
+
+routes.use('/bot',botRoutes);
 
 routes.use('/images/booklets',express.static(path.join(__dirname,'../images/booklets')));
 

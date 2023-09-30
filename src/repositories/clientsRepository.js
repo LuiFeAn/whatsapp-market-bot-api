@@ -14,6 +14,12 @@ class ClientRepository {
 
     }
 
+    getClient(key){
+
+        return this.clients.get(key);
+
+    }
+
     setClient(id,data){
 
         this.clients.set(id,data);
