@@ -1,4 +1,4 @@
-const { Econobot } = require('./lib/econoBot');
+const { Econobot } = require('./lib/econobot');
 const { Client, LocalAuth } = require('whatsapp-web.js');
 
 const bot = new Econobot({
@@ -6,7 +6,10 @@ const bot = new Econobot({
     client: new Client({
         authStrategy: new LocalAuth({
            dataPath:'./wpp_auth'
-        })
+        }),
+        puppeteer:{
+            args: ['--no-sandbox', '--disable-setuid-sandbox']
+        }
     }),
 });
 
